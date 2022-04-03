@@ -1,4 +1,5 @@
 from enum import Enum
+from typing import Optional
 
 from PIL import ImageColor
 
@@ -52,7 +53,7 @@ Returns the color object based on the given rgb tuple
 """
 
 
-def get_matching_color(rgb) -> Color:
+def get_matching_color(rgb) -> Optional[Color]:
     if (color := rgb_to_color.get(rgb)) is None:
         print("Color not found:", rgb)
         return None
@@ -75,7 +76,7 @@ Returns the color object based on a given place color index
 """
 
 
-def get_color_from_index(index) -> Color:
+def get_color_from_index(index) -> Optional[Color]:
     for color in Color:
         if color.value["id"] == index:
             return color
