@@ -66,7 +66,7 @@ class Server:
             self.__client_count -= 1
 
     @staticmethod
-    async def __wrap_data(data: dict, operation: str = "pixel") -> dict:
+    def __wrap_data(data: dict, operation: str = "pixel") -> dict:
         return {
                 "operation": operation,
                 "data": data
