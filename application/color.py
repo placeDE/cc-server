@@ -30,9 +30,13 @@ class Color(Enum):
     WHITE = {"id": 31, "hex": "#FFFFFF"}
 
 
+rgb_to_color = {}
+
+
 # generate rgb values for all colors
 for color in Color:
     color.value["rgb"] = ImageColor.getcolor(color.value["hex"], "RGB")
+    rgb_to_color.update({color.value["rgb"]: color})
 
 """
 Returns the color object based on the given rgb tuple
@@ -40,12 +44,14 @@ Returns the color object based on the given rgb tuple
 
 
 def get_matching_color(rgb) -> Color:
-    for color in Color:
+    if (color := rgb_to_color.get(rgb)) is None:
+        print("Color not found:", rgb)
+        return None
+    return color
+    """for color in Color:
         if color.value["rgb"] == rgb:
-            return color
+            return color"""
 
-    print("Color not found:", rgb)
-    return None
 
 
 """

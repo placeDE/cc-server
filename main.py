@@ -20,13 +20,6 @@ monalisa = canvas.Canvas(target_configuration)
 # server for remote bot connections
 server = websocket_server.Server(monalisa, {"host": "0.0.0.0", "port": 8080})
 
-looper = asyncio.get_event_loop()
-
-server.run(looper)
-
-
-# looper.create_task()
-
 async def main_loop():
     while True:
         # update board if it needs to be updated
@@ -35,5 +28,10 @@ async def main_loop():
         await asyncio.sleep(10)
 
 
+looper = asyncio.new_event_loop()
 looper.create_task(main_loop())
-looper.run_forever()
+looper.create_task(server.run(looper))
+try:
+    looper.run_forever()
+except KeyboardInterrupt:
+    print("Exiting!")

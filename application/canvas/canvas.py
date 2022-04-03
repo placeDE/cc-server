@@ -4,15 +4,14 @@ import re
 import time
 from io import BytesIO
 from threading import Thread
-from typing import TYPE_CHECKING
 
+import aiohttp
 import requests
 from PIL import Image
 from websocket import create_connection
 
 from application.color import get_matching_color, Color, get_color_from_index
-from application.static_stuff import CANVAS_UPDATE_INTERVAL, GRAPHQL_GET_CONFIG, get_graphql_canvas_query
-
+from application.static_stuff import CANVAS_UPDATE_INTERVAL
 from application.target_configuration.target_configuration import TargetConfiguration
 
 BOARD_SIZE_X = 2000
@@ -33,17 +32,16 @@ class Canvas:
             for y in range(BOARD_SIZE_Y):
                 column.append(Color.WHITE)
             self.colors.append(column)
-        self.update_board()
 
-    def update_image(self, raw_image, offset_x, offset_y):
+    async def update_image(self, raw_image, offset_x, offset_y):
         self.last_update = time.time()
 
         image = Image.open(raw_image)
         image_data = image.convert("RGB").load()
 
         # convert to color indices
-        for x in range(image.width):
-            for y in range(image.height):
+        for y in range(image.height):
+            for x in range(image.width):
                 self.colors[x + offset_x][y + offset_y] = get_matching_color(image_data[x, y])
 
         print("Board updated.")
@@ -53,7 +51,7 @@ class Canvas:
 
     def calculate_mismatched_pixels(self):
         mismatched_pixels = []
-        for target_pixel in self.target_configuration.get_pixels():
+        for target_pixel in await self.target_configuration.get_pixels():
             current_color = self.get_pixel_color(target_pixel["x"], target_pixel["y"])
             if current_color is None:
                 print("Couldn't determine color for pixel at " + str(target_pixel["x"]) + ", " + str(target_pixel["y"]))
@@ -72,40 +70,43 @@ class Canvas:
 
         self.mismatched_pixels = list(sorted(mismatched_pixels, key=lambda x: x["priority"]))
 
-    def pop_mismatched_pixel(self):
+    async def pop_mismatched_pixel(self):
         if len(self.mismatched_pixels) > 0:
             return self.mismatched_pixels.pop(0)
         return False
 
-    def update_access_token(self):
+    async def update_access_token(self):
         """
         Fetch a valid AccessToken
         """
 
         print("Obtaining AccessToken token...")
-        r = requests.get("https://new.reddit.com/r/place/")
-        time.sleep(1)
+        async with aiohttp.ClientSession() as session:
+            async with session.get("https://new.reddit.com/r/place/") as resp:
+                if resp.status != 200:
+                    print("No token!")
+                    return
 
-        access_token_sequence = re.search(r"\"accessToken\":\"(\"[^\"]*)\"", r.text)
-        self.access_token = access_token_sequence[15:][:-1]
-        print("AccessToken: " + self.access_token)
-        time.sleep(1)
+                if access_token_sequence := re.search(r"\"accessToken\":\"([\w0-9_\-]*)\"", await resp.text()):
+                    self.access_token = access_token_sequence.group(1)
+                    print("AccessToken: " + self.access_token)
+                else:
+                    print("No token!")
 
-    def update_board(self):
+    async def update_board(self):
         """
         Fetch the current state of the board/canvas for the requed areas
         """
         if self.last_update + CANVAS_UPDATE_INTERVAL >= time.time():
             return False
 
-        self.update_access_token()
+        await self.update_access_token()
 
         results = []
         threads = []
 
-        if "canvases_enabled" in self.target_configuration.get_config():  # the configuration can disable some canvases to reduce load
-            to_update = self.target_configuration.get_config()["canvases_enabled"]
-        else:  # by default, use all (2 at the moment)
+        if (to_update := (await self.target_configuration.get_config()).get("canvases_enabled")) is None:  # the configuration can disable some canvases to reduce load
+            # by default, use all (2 at the moment)
             to_update = [0, 1]
 
         for canvas_id in to_update:
@@ -118,7 +119,7 @@ class Canvas:
 
         for r in results:
             # Tell the board to update with the offset of the current canvas
-            self.update_image(*r)
+            await self.update_image(*r)
 
         return True
 
@@ -130,13 +131,35 @@ class Canvas:
         """
         print("Getting board")
         try:
-            ws = create_connection("wss://gql-realtime-2.reddit.com/query")
-            ws.send(
-                json.dumps({"type": "connection_init", "payload": {"Authorization": "Bearer " + self.access_token}, }))
-            ws.recv()
-            ws.send(json.dumps(GRAPHQL_GET_CONFIG))
-            ws.recv()
-            ws.send(get_graphql_canvas_query(canvas_id))
+            # https://websocket-client.readthedocs.io/en/latest/core.html#websocket._core.create_connection
+
+            async with websockets.connect("wss://gql-realtime-2.reddit.com/query", extra_headers={
+                "User-Agent": "Mozilla/5.0 (X11; Linux x86_64; rv:98.0) Gecko/20100101 Firefox/98.0",
+                "Origin": "https://hot-potato.reddit.com"
+            }) as ws:
+                await ws.send(
+                    json.dumps({"type": "connection_init", "payload": {"Authorization": "Bearer " + self.access_token}}))
+                await ws.recv()
+                await ws.send(json.dumps(
+                    {
+                        "id": "2",
+                        "type": "start",
+                        "payload": {
+                            "variables": {
+                                "input": {
+                                    "channel": {
+                                        "teamOwner": "AFD2022",
+                                        "category": "CANVAS",
+                                        "tag": str(canvas_id),
+                                    }
+                                }
+                            },
+                            "extensions": {},
+                            "operationName": "replace",
+                            "query": "subscription replace($input: SubscribeInput!) {\n  subscribe(input: $input) {\n    id\n    ... on BasicMessage {\n      data {\n        __typename\n        ... on FullFrameMessageData {\n          __typename\n          name\n          timestamp\n        }\n        ... on DiffFrameMessageData {\n          __typename\n          name\n          currentTimestamp\n          previousTimestamp\n        }\n      }\n      __typename\n    }\n    __typename\n  }\n}\n",
+                        },
+                    }
+                ))
 
             filename = ""
             while True:
@@ -151,6 +174,5 @@ class Canvas:
                         lst.append((img, 1000 * canvas_id, 0))
                         break
 
-            ws.close()
-        except:  # reddit closes the connection sometimes
-            pass
+        except Exception as e:  # reddit closes the connection sometimes
+            print(e)

@@ -4,3 +4,4 @@ pillow
 requests
 websockets
 websocket-client
+aiohttp

@@ -50,7 +50,7 @@ class Server:
 
             async for msg in socket:
                 if msg == "request_pixel":
-                    pixel = self.provider.pop_mismatched_pixel()
+                    pixel = await self.provider.pop_mismatched_pixel()
                     if pixel:
 
                         pixel.update({"colour": get_color_from_index(pixel["color_index"])})
