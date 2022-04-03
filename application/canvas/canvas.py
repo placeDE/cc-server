@@ -13,7 +13,7 @@ from application.static_stuff import CANVAS_UPDATE_INTERVAL
 from application.target_configuration.target_configuration import TargetConfiguration
 
 BOARD_SIZE_X = 2000
-BOARD_SIZE_Y = 1000
+BOARD_SIZE_Y = 2000
 
 
 class Canvas:
@@ -105,7 +105,7 @@ class Canvas:
         if (to_update := (await self.target_configuration.get_config()).get(
                 "canvases_enabled")) is None:  # the configuration can disable some canvases to reduce load
             # by default, use all (2 at the moment)
-            to_update = [0, 1]
+            to_update = [0, 1, 2, 3]
 
         for canvas_id in to_update:
             await self.update_canvas(canvas_id, results)

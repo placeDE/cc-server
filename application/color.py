@@ -4,30 +4,39 @@ from PIL import ImageColor
 
 
 class Color(Enum):
-    DARK_RED = {"id": 1, "hex": "#BE0039"}
-    RED = {"id": 2, "hex": "#FF4500"}
-    ORANGE = {"id": 3, "hex": "#FFA800"}
-    YELLOW = {"id": 4, "hex": "#FFD635"}
-    DARK_GREEN = {"id": 6, "hex": "#00A368"}
-    GREEN = {"id": 7, "hex": "#00CC78"}
-    LIGHT_GREEN = {"id": 8, "hex": "#7EED56"}
-    DARK_TEAL = {"id": 9, "hex": "#00756F"}
-    LIGHT_TEAL = {"id": 10, "hex": "#009EAA"}
-    DARK_BLUE = {"id": 12, "hex": "#2450A4"}
-    BLUE = {"id": 13, "hex": "#3690EA"}
-    CYAN = {"id": 14, "hex": "#51E9F4"}
-    INDIGO = {"id": 15, "hex": "#493AC1"}
-    PERIWINKLE = {"id": 16, "hex": "#6A5CFF"}
-    DARK_PURPLE = {"id": 18, "hex": "#811E9F"}
-    PURPLE = {"id": 19, "hex": "#B44AC0"}
-    DARK_PINK = {"id": 22, "hex": "#FF3881"}
-    LIGHT_PINK = {"id": 22, "hex": "#FF99AA"}
+    BURGUNDY = {"id": 0, "hex": "#6d001a"}
+    DARK_RED = {"id": 1, "hex": "#be0039"}
+    RED = {"id": 2, "hex": "#ff4500"}
+    ORANGE = {"id": 3, "hex": "#ffa800"}
+    YELLOW = {"id": 4, "hex": "#ffd635"}
+    PALE_YELLOW = {"id": 5, "hex": "#fff8b8"}
+    DARK_GREEN = {"id": 6, "hex": "#00a368"}
+    GREEN = {"id": 7, "hex": "#00cc78"}
+    LIGHT_GREEN = {"id": 8, "hex": "#7eed56"}
+    DARK_TEAL = {"id": 9, "hex": "#00756f"}
+    TEAL = {"id": 10, "hex": "#009eaa"}
+    LIGHT_TEAL = {"id": 11, "hex": "#00ccc0"}
+    DARK_BLUE = {"id": 12, "hex": "#2450a4"}
+    BLUE = {"id": 13, "hex": "#3690ea"}
+    LIGHT_BLUE = {"id": 14, "hex": "#51e9f4"}
+    INDIGO = {"id": 15, "hex": "#493ac1"}
+    PERIWINKLE = {"id": 16, "hex": "#6a5cff"}
+    LAVENDER = {"id": 17, "hex": "#94b3ff"}
+    DARK_PURPLE = {"id": 18, "hex": "#811e9f"}
+    PURPLE = {"id": 19, "hex": "#b44ac0"}
+    PALE_PURPLE = {"id": 20, "hex": "#e4abff"}
+    MAGENTA = {"id": 21, "hex": "#de107f"}
+    PINK = {"id": 22, "hex": "#ff3881"}
+    LIGHT_PINK = {"id": 23, "hex": "#ff99aa"}
     DARK_BROWN = {"id": 24, "hex": "#6D482F"}
     BROWN = {"id": 25, "hex": "#9C6926"}
+    BEIGE = {"id": 26, "hex": "#FFB470"}
     BLACK = {"id": 27, "hex": "#000000"}
-    GREY = {"id": 29, "hex": "#898D90"}
-    LIGHT_GREY = {"id": 30, "hex": "#D4D7D9"}
-    WHITE = {"id": 31, "hex": "#FFFFFF"}
+    DARK_GRAY = {"id": 28, "hex": "#515252"}
+    GRAY = {"id": 29, "hex": "#898D90"}
+    LIGHT_GRAY = {"id": 30, "hex": "#D4D7D9"}
+    WHITE = {"id": 31, "hex": "#ffffff"}
+
 
 
 rgb_to_color = {}
