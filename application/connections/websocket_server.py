@@ -72,6 +72,9 @@ class Server:
                     self.__client_count += bot_count
                     print(f"New Client connected! New bot count: {self.__client_count}")
 
+                elif req.get("operation") == "get-botcount":
+                    await socket.send(bot_count)
+
         except websockets.ConnectionClosed:
             pass
         finally:
