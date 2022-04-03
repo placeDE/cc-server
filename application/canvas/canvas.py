@@ -3,14 +3,11 @@ import random
 import re
 import time
 from io import BytesIO
-from threading import Thread
 
 import aiohttp
-import requests
-from PIL import Image
 import websockets
+from PIL import Image
 
-import static_stuff
 from application.color import get_matching_color, Color, get_color_from_index
 from application.static_stuff import CANVAS_UPDATE_INTERVAL
 from application.target_configuration.target_configuration import TargetConfiguration
@@ -105,7 +102,8 @@ class Canvas:
 
         results = []
 
-        if (to_update := (await self.target_configuration.get_config()).get("canvases_enabled")) is None:  # the configuration can disable some canvases to reduce load
+        if (to_update := (await self.target_configuration.get_config()).get(
+                "canvases_enabled")) is None:  # the configuration can disable some canvases to reduce load
             # by default, use all (2 at the moment)
             to_update = [0, 1]
 
@@ -133,7 +131,8 @@ class Canvas:
                 "Origin": "https://hot-potato.reddit.com"
             }) as ws:
                 await ws.send(
-                    json.dumps({"type": "connection_init", "payload": {"Authorization": "Bearer " + self.access_token}}))
+                    json.dumps(
+                        {"type": "connection_init", "payload": {"Authorization": "Bearer " + self.access_token}}))
                 await ws.recv()
                 await ws.send(json.dumps(
                     {
