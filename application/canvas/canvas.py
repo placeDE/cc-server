@@ -1,3 +1,4 @@
+import asyncio
 import json
 import random
 import re
@@ -21,6 +22,8 @@ class Canvas:
         self.access_token = ""
         self.last_update = 0
         self.colors = []  # 2D array of the entire board (BOARD_SIZE_X x BOARD_SIZE_Y), Color objects
+        self.mismatched_pixels = []
+        self.lock = asyncio.Lock()
         self.target_configuration: TargetConfiguration = target_configuration
         self.mismatched_pixels = []
 
@@ -55,6 +58,9 @@ class Canvas:
                 print("Couldn't determine color for pixel at " + str(target_pixel["x"]) + ", " + str(target_pixel["y"]))
                 continue
 
+            if target_pixel.get("color_index") is None:
+                print(target_pixel)
+                continue
             if current_color is None \
                     or current_color.value["id"] != target_pixel["color_index"] \
                     and get_color_from_index(target_pixel["color_index"]):
@@ -72,9 +78,10 @@ class Canvas:
         self.mismatched_pixels = list(sorted(mismatched_pixels, key=lambda x: x["priority"]))
 
     async def pop_mismatched_pixel(self):
-        if len(self.mismatched_pixels) > 0:
-            return self.mismatched_pixels.pop(0)
-        return False
+        with self.lock:
+            if len(self.mismatched_pixels) > 0:
+                return self.mismatched_pixels.pop(0)
+            return False
 
     async def update_access_token(self):
         """
@@ -98,26 +105,27 @@ class Canvas:
         """
         Fetch the current state of the board/canvas for the requed areas
         """
-        if self.last_update + CANVAS_UPDATE_INTERVAL >= time.time():
-            return False
+        with self.lock:
+            if self.last_update + CANVAS_UPDATE_INTERVAL >= time.time():
+                return False
 
-        await self.update_access_token()
+            await self.update_access_token()
 
-        results = []
+            results = []
 
-        if (to_update := (await self.target_configuration.get_config()).get(
-                "canvases_enabled")) is None:  # the configuration can disable some canvases to reduce load
-            # by default, use all (2 at the moment)
-            to_update = [0, 1, 2, 3]
+            if (to_update := (await self.target_configuration.get_config()).get(
+                    "canvases_enabled")) is None:  # the configuration can disable some canvases to reduce load
+                # by default, use all (2 at the moment)
+                to_update = [0, 1, 2, 3]
 
-        for canvas_id in to_update:
-            await self.update_canvas(canvas_id, results)
+            for canvas_id in to_update:
+                await self.update_canvas(canvas_id, results)
 
-        for r in results:
-            # Tell the board to update with the offset of the current canvas
-            await self.update_image(*r)
+            for r in results:
+                # Tell the board to update with the offset of the current canvas
+                await self.update_image(*r)
 
-        return True
+            return True
 
     async def update_canvas(self, canvas_id, lst):
         """
