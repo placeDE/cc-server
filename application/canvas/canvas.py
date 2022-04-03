@@ -25,7 +25,6 @@ class Canvas:
         self.mismatched_pixels = []
         self.lock = asyncio.Lock()
         self.target_configuration: TargetConfiguration = target_configuration
-        self.mismatched_pixels = []
 
         # Fill with white preset
         for x in range(BOARD_SIZE_X):
@@ -78,7 +77,7 @@ class Canvas:
         self.mismatched_pixels = list(sorted(mismatched_pixels, key=lambda x: x["priority"]))
 
     async def pop_mismatched_pixel(self):
-        with self.lock:
+        async with self.lock:
             if len(self.mismatched_pixels) > 0:
                 return self.mismatched_pixels.pop(0)
             return False
@@ -105,10 +104,9 @@ class Canvas:
         """
         Fetch the current state of the board/canvas for the requed areas
         """
-        with self.lock:
-            if self.last_update + CANVAS_UPDATE_INTERVAL >= time.time():
-                return False
-
+        if self.last_update + CANVAS_UPDATE_INTERVAL >= time.time():
+            return False
+        async with self.lock:
             await self.update_access_token()
 
             results = []
