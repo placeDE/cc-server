@@ -13,8 +13,7 @@ from websocket import create_connection
 from application.color import get_matching_color, Color, get_color_from_index
 from application.static_stuff import CANVAS_UPDATE_INTERVAL, GRAPHQL_GET_CONFIG, get_graphql_canvas_query
 
-if TYPE_CHECKING:
-    from application.target_configuration.target_configuration import TargetConfiguration
+from application.target_configuration.target_configuration import TargetConfiguration
 
 BOARD_SIZE_X = 2000
 BOARD_SIZE_Y = 1000
@@ -87,8 +86,8 @@ class Canvas:
         r = requests.get("https://new.reddit.com/r/place/")
         time.sleep(1)
 
-        access_toke_sequence = re.match("\"accessToken\":\"(\\\"|[^\"]*)\"", r.text)
-        self.access_token = access_toke_sequence[15:][:-1]
+        access_token_sequence = re.search(r"\"accessToken\":\"(\"[^\"]*)\"", r.text)
+        self.access_token = access_token_sequence[15:][:-1]
         print("AccessToken: " + self.access_token)
         time.sleep(1)
 

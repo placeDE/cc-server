@@ -3,3 +3,4 @@ uvicorn
 pillow
 requests
 websockets
+websocket-client

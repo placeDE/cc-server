@@ -5,15 +5,15 @@ from __future__ import annotations
 import asyncio
 
 # our imports
-from target_configuration.target_configuration import TargetConfiguration
+from application.target_configuration.target_configuration import TargetConfiguration
+from application.canvas import canvas
+from application.connections import websocket_server
 
 # from fastapi import
 
 
-# create target_configuration
-from canvas import canvas
-from connections import websocket_server
 
+# create target_configuration
 target_configuration = TargetConfiguration()
 # manage r/place canvas
 monalisa = canvas.Canvas(target_configuration)
