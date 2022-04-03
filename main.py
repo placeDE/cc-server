@@ -5,7 +5,7 @@ from __future__ import annotations
 import asyncio
 
 # our imports
-from application.target_configuration.target_configuration import TargetConfiguration
+from target_configuration.target_configuration import TargetConfiguration
 
 # from fastapi import
 
