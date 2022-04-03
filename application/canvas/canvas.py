@@ -168,7 +168,21 @@ class Canvas:
                                 async with session.get(filename) as resp:
                                     if resp.status == 200:
                                         img = BytesIO(await resp.content.read())
-                                        lst.append((img, 1000 * canvas_id, 0))
+
+                                        # Tell the board to update with the offset of the current canvas
+                                        if canvas_id == 0:
+                                            x = 0
+                                            y = 0
+                                        if canvas_id == 1:
+                                            x = 1000
+                                            y = 0
+                                        if canvas_id == 2:
+                                            x = 0
+                                            y = 1000
+                                        if canvas_id == 3:
+                                            x = 1000
+                                            y = 1000
+                                        lst.append((img, x, y))
                             break
 
         except Exception as e:  # reddit closes the connection sometimes

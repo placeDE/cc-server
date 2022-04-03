@@ -47,7 +47,6 @@ class Server:
         print(f"New Client connected! New client count: {self.__client_count}")
 
         try:
-            version = json.loads(await socket.read_message())
             # TODO: check for update availability.
 
             async for msg in socket:
