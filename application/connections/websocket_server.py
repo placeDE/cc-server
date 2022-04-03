@@ -44,14 +44,17 @@ class Server:
 
     async def __handler(self, socket: WebSocketServerProtocol):
         self.__client_count += 1
-        print(f"New Client connected! New client count: {self.__client_count}")
+        bot_count = 0
 
         try:
             # TODO: check for update availability.
 
             async for msg in socket:
                 print(msg)
-                if msg == "request_pixel":
+
+                req = json.loads(msg)
+
+                if req.get("operation") == "request-pixel":
                     pixel = await self.provider.pop_mismatched_pixel()
                     if pixel:
                         data = {
@@ -60,20 +63,27 @@ class Server:
                             "color": get_color_from_index(pixel["color_index"]).value["id"]
                         }
 
-                        await socket.send(json.dumps(Server.__wrap_data(data)))
+                        await socket.send(json.dumps(Server.__wrap_data(data, req.get("user", ""))))
                     else:
                         await socket.send("null")
+
+                elif req.get("operation") == "handshake":
+                    bot_count = req["data"].get("useraccounts", 1)
+                    self.__client_count += bot_count
+                    print(f"New Client connected! New bot count: {self.__client_count}")
+
         except websockets.ConnectionClosed:
             pass
         finally:
-            self.__client_count -= 1
+            self.__client_count -= bot_count
 
     @staticmethod
-    def __wrap_data(data: dict, operation: str = "place-pixel") -> dict:
+    def __wrap_data(data: dict, user: str, operation: str = "place-pixel") -> dict:
         return {
                 "operation": operation,
-                "data": data
+                "data": data,
+                "user": user
             }
 
-    def get_connection_count(self) -> int:
+    def get_bot_count(self) -> int:
         return self.__client_count
