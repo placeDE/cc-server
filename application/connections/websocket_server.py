@@ -54,7 +54,7 @@ class Server:
                     pixel = await self.provider.pop_mismatched_pixel()
                     if pixel:
 
-                        pixel.update({"colour": get_color_from_index(pixel["color_index"])})
+                        pixel.update({"colour": get_color_from_index(pixel["color_index"]).value["id"]})
                         del pixel["priority"]
 
                         await socket.send(json.dumps(Server.__wrap_data(pixel)))
