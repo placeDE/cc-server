@@ -8,4 +8,4 @@ RUN pip install --no-cache-dir --upgrade -r /code/requirements.txt
 COPY ./application /code/application
 COPY ./main.py /code/
 
-ENTRYPOINT ["python", "/code/main.py"]
+ENTRYPOINT ["python", "-u", "/code/main.py"]
