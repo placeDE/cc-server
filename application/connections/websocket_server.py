@@ -56,6 +56,7 @@ class Server:
 
                         pixel.update({"colour": get_color_from_index(pixel["color_index"]).value["id"]})
                         del pixel["priority"]
+                        del pixel["color_index"]
 
                         await socket.send(json.dumps(Server.__wrap_data(pixel)))
                     else:
@@ -66,7 +67,7 @@ class Server:
             self.__client_count -= 1
 
     @staticmethod
-    def __wrap_data(data: dict, operation: str = "pixel") -> dict:
+    def __wrap_data(data: dict, operation: str = "place-pixel") -> dict:
         return {
                 "operation": operation,
                 "data": data

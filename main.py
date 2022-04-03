@@ -33,5 +33,5 @@ looper.create_task(main_loop())
 looper.create_task(server.run(looper))
 try:
     looper.run_forever()
-except KeyboardInterrupt:
+except (KeyboardInterrupt, RuntimeError):
     print("Exiting!")
