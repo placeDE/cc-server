@@ -53,12 +53,13 @@ class Server:
                 if msg == "request_pixel":
                     pixel = await self.provider.pop_mismatched_pixel()
                     if pixel:
+                        data = {
+                            "x": pixel["x"],
+                            "y": pixel["y"],
+                            "color": get_color_from_index(pixel["color_index"]).value["id"]
+                        }
 
-                        pixel.update({"color": get_color_from_index(pixel["color_index"]).value["id"]})
-                        del pixel["priority"]
-                        del pixel["color_index"]
-
-                        await socket.send(json.dumps(Server.__wrap_data(pixel)))
+                        await socket.send(json.dumps(Server.__wrap_data(data)))
                     else:
                         await socket.send("null")
         except websockets.ConnectionClosed:

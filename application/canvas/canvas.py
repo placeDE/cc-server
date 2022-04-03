@@ -57,9 +57,6 @@ class Canvas:
                 print("Couldn't determine color for pixel at " + str(target_pixel["x"]) + ", " + str(target_pixel["y"]))
                 continue
 
-            if target_pixel.get("color_index") is None:
-                print(target_pixel)
-                continue
             if current_color is None \
                     or current_color.value["id"] != target_pixel["color_index"] \
                     and get_color_from_index(target_pixel["color_index"]):
@@ -69,9 +66,6 @@ class Canvas:
             return []
 
         for p in mismatched_pixels:
-            if p.get("priority") is None:
-                print(p)
-                continue
             p.update({"priority": [p["priority"][0], p["priority"][1] * random.randint(0, 100) / 100]})
 
         self.mismatched_pixels = list(sorted(mismatched_pixels, key=lambda x: x["priority"]))
