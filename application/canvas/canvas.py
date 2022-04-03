@@ -44,8 +44,6 @@ class Canvas:
             for x in range(image.width):
                 self.colors[x + offset_x][y + offset_y] = get_matching_color(image_data[x, y])
 
-        print("Board updated.")
-
     def get_pixel_color(self, x: int, y: int) -> Color:
         return self.colors[x][y]
 
@@ -90,7 +88,6 @@ class Canvas:
 
                 if access_token_sequence := re.search(r"\"accessToken\":\"([\w0-9_\-]*)\"", await resp.text()):
                     self.access_token = access_token_sequence.group(1)
-                    print("AccessToken: " + self.access_token)
                 else:
                     print("No token!")
 
@@ -117,6 +114,8 @@ class Canvas:
                 # Tell the board to update with the offset of the current canvas
                 await self.update_image(*r)
 
+            print("Board updated!")
+
             return True
 
     async def update_canvas(self, canvas_id, lst):
@@ -125,7 +124,6 @@ class Canvas:
         Uses the returned URL to request the actual image using HTTP
         :param canvas_id: the canvas to fetch
         """
-        print("Getting board")
         try:
             # https://websocket-client.readthedocs.io/en/latest/core.html#websocket._core.create_connection
 
@@ -166,7 +164,6 @@ class Canvas:
                         if msg["data"]["__typename"] == "FullFrameMessageData":
                             filename = msg["data"]["name"]
 
-                            print("Got image for canvas " + str(canvas_id) + ": " + filename)
                             async with aiohttp.ClientSession() as session:
                                 async with session.get(filename) as resp:
                                     if resp.status == 200:
