@@ -22,11 +22,11 @@ class TargetConfiguration:
         self.config = {}
         self.pixels = []
 
-    async def get_config(self):
+    async def get_config(self, ignore_time: bool = False):
         """
         Get the config and refresh it first if necessary
         """
-        if self.last_update + UPDATE_INTERVAL < time.time():
+        if self.last_update + UPDATE_INTERVAL < time.time() and not ignore_time:
             await self.refresh_config()
             self.last_update = time.time()
 

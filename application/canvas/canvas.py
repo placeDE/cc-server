@@ -100,19 +100,19 @@ class Canvas:
         """
         if self.last_update + CANVAS_UPDATE_INTERVAL >= time.time():
             return False
+        await self.update_access_token()
+
+        results = []
+
+        if (to_update := (await self.target_configuration.get_config(True)).get(
+                "canvases_enabled")) is None:  # the configuration can disable some canvases to reduce load
+            # by default, use all (2 at the moment)
+            to_update = [0, 1, 2, 3]
+
+        for canvas_id in to_update:
+            await self.update_canvas(canvas_id, results)
+
         async with self.lock:
-            await self.update_access_token()
-
-            results = []
-
-            if (to_update := (await self.target_configuration.get_config()).get(
-                    "canvases_enabled")) is None:  # the configuration can disable some canvases to reduce load
-                # by default, use all (2 at the moment)
-                to_update = [0, 1, 2, 3]
-
-            for canvas_id in to_update:
-                await self.update_canvas(canvas_id, results)
-
             for r in results:
                 # Tell the board to update with the offset of the current canvas
                 await self.update_image(*r)

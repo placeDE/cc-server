@@ -25,7 +25,7 @@ async def main_loop():
         # update board if it needs to be updated
         if await monalisa.update_board():
             await monalisa.calculate_mismatched_pixels()
-        await asyncio.sleep(10)
+        await asyncio.sleep(30)
 
 
 looper = asyncio.new_event_loop()
