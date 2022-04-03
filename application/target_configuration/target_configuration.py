@@ -1,7 +1,9 @@
 import json
 import random
 import time
+import asyncio
 
+import aiohttp
 import requests
 
 from application import static_stuff

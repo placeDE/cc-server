@@ -8,8 +8,9 @@ from threading import Thread
 import aiohttp
 import requests
 from PIL import Image
-from websocket import create_connection
+import websockets
 
+import static_stuff
 from application.color import get_matching_color, Color, get_color_from_index
 from application.static_stuff import CANVAS_UPDATE_INTERVAL
 from application.target_configuration.target_configuration import TargetConfiguration
@@ -49,7 +50,7 @@ class Canvas:
     def get_pixel_color(self, x: int, y: int) -> Color:
         return self.colors[x][y]
 
-    def calculate_mismatched_pixels(self):
+    async def calculate_mismatched_pixels(self):
         mismatched_pixels = []
         for target_pixel in await self.target_configuration.get_pixels():
             current_color = self.get_pixel_color(target_pixel["x"], target_pixel["y"])
@@ -103,19 +104,13 @@ class Canvas:
         await self.update_access_token()
 
         results = []
-        threads = []
 
         if (to_update := (await self.target_configuration.get_config()).get("canvases_enabled")) is None:  # the configuration can disable some canvases to reduce load
             # by default, use all (2 at the moment)
             to_update = [0, 1]
 
         for canvas_id in to_update:
-            t = Thread(target=self.update_canvas, args=[canvas_id, results], daemon=True)
-            t.start()
-            threads.append(t)
-
-        for t in threads:
-            t.join()
+            await self.update_canvas(canvas_id, results)
 
         for r in results:
             # Tell the board to update with the offset of the current canvas
@@ -123,7 +118,7 @@ class Canvas:
 
         return True
 
-    def update_canvas(self, canvas_id, lst):
+    async def update_canvas(self, canvas_id, lst):
         """
         Connects a websocket and sends a request to the server for the current state of the board
         Uses the returned URL to request the actual image using HTTP
@@ -161,18 +156,21 @@ class Canvas:
                     }
                 ))
 
-            filename = ""
-            while True:
-                temp = json.loads(ws.recv())
-                if temp["type"] == "data":
-                    msg = temp["payload"]["data"]["subscribe"]
-                    if msg["data"]["__typename"] == "FullFrameMessageData":
-                        filename = msg["data"]["name"]
+                filename = ""
+                while True:
+                    temp = json.loads(await ws.recv())
+                    if temp["type"] == "data":
+                        msg = temp["payload"]["data"]["subscribe"]
+                        if msg["data"]["__typename"] == "FullFrameMessageData":
+                            filename = msg["data"]["name"]
 
-                        print("Got image for canvas " + str(canvas_id) + ": " + filename)
-                        img = BytesIO(requests.get(filename, stream=True).content)
-                        lst.append((img, 1000 * canvas_id, 0))
-                        break
+                            print("Got image for canvas " + str(canvas_id) + ": " + filename)
+                            async with aiohttp.ClientSession() as session:
+                                async with session.get(filename) as resp:
+                                    if resp.status == 200:
+                                        img = BytesIO(await resp.content.read())
+                                        lst.append((img, 1000 * canvas_id, 0))
+                            break
 
         except Exception as e:  # reddit closes the connection sometimes
             print(e)

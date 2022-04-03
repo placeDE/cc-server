@@ -23,8 +23,8 @@ server = websocket_server.Server(monalisa, {"host": "0.0.0.0", "port": 8080})
 async def main_loop():
     while True:
         # update board if it needs to be updated
-        if monalisa.update_board():
-            monalisa.calculate_mismatched_pixels()
+        if await monalisa.update_board():
+            await monalisa.calculate_mismatched_pixels()
         await asyncio.sleep(10)
 
 

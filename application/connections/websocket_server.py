@@ -37,8 +37,10 @@ class Server:
         """
         erstellt den server und lässt diesen unendlich laufen. Sollte evtl. in einem eigenen Thread aufgerufen werden.
         """
-        self.__server = serve(self.__handler, self.host, self.port, loop=looper)
-        looper.run_until_complete(self.__server)
+        async with serve(self.__handler, self.host, self.port):
+            while True:
+                await asyncio.sleep(1000000)
+            #await asyncio.Future()
 
     async def __handler(self, socket: WebSocketServerProtocol):
         self.__client_count += 1
