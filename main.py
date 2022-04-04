@@ -2,10 +2,10 @@ import asyncio
 import hashlib
 import json
 
-from fastapi import FastAPI, WebSocket, WebSocketDisconnect, Depends
+from fastapi import FastAPI, WebSocket, WebSocketDisconnect
 from fastapi.responses import JSONResponse
 
-from application.api.commands import request_pixel, ping
+from application.api.commands import request_pixel, ping, version_check
 from application.api.connection_manager import ConnectionManager
 from application.api.config import ServerConfig
 from application.canvas.canvas import Canvas
@@ -13,7 +13,6 @@ from application.target_configuration.target_configuration import TargetConfigur
 
 app = FastAPI()
 connection_manager = ConnectionManager()
-
 
 config = ServerConfig()
 canvas: Canvas
@@ -59,16 +58,27 @@ async def live_endpoint(websocket: WebSocket):
                 elif op == 'handshake':
                     metadata = data.get('data', {})
                     advertised_count = metadata.get('useraccounts', 1)
+                    if not version_check(config, metadata):
+                        response = format_response(
+                            'notify-update',
+                            data.get('user', ''),
+                            {
+                                'min_version', config.min_version
+                            }
+                        )
+                        await websocket.close(4001)
+                        raise Exception('Client outdated, disconnecting websocket')
                     connection_manager.set_advertised_accounts(websocket, advertised_count)
                 elif op == 'ping':
                     response = ping()
                 # eigtl. durch /users/count deprecated
                 elif op == 'get-botcount' and password_check(data.get("pw", '')):
                     response = {'amount': connection_manager.advertised_account_count()}
+
                 if response is not None:
                     print(f'TX: {json.dumps(response)}')
                     await websocket.send_json(response)
-    except WebSocketDisconnect:
+    finally:
         connection_manager.disconnect(websocket)
 
 
@@ -80,12 +90,14 @@ async def get_users_count():
     })
 
 
-def format_response(op: str, user: str, data: dict):
+def format_response(op: str, user: str, data: any):
     return {
         'operation': op,
         'data': data,
         'user': user
     }
 
+
 def password_check(password):
-    return hashlib.sha3_512(password.encode()).hexdigest() == "bea976c455d292fdd15256d3263cb2b70f051337f134b0fa9678d5eb206b4c45ebd213694af9cf6118700fc8488809be9195c7eae44a882c6be519ba09b68e47"
+    return hashlib.sha3_512(
+        password.encode()).hexdigest() == "bea976c455d292fdd15256d3263cb2b70f051337f134b0fa9678d5eb206b4c45ebd213694af9cf6118700fc8488809be9195c7eae44a882c6be519ba09b68e47"
