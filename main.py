@@ -1,6 +1,8 @@
 import asyncio
 import hashlib
 import json
+import sys
+import traceback
 
 from fastapi import FastAPI, WebSocket
 from fastapi.responses import JSONResponse
@@ -24,6 +26,8 @@ async def update_canvas(monalisa: Canvas):
         try:
             await monalisa.update_board()
             await asyncio.sleep(10)
+        except:
+            traceback.print_exception(*sys.exc_info())
         finally:
             print('There was an error updating the canvas.')
 
