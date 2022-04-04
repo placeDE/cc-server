@@ -95,6 +95,8 @@ async def live_endpoint(websocket: WebSocket):
                 if response is not None:
                     print(response)
                     await websocket.send_json(response)
+    except:
+        pass
     finally:
         connection_manager.disconnect(websocket)
 
