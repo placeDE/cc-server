@@ -77,7 +77,7 @@ async def live_endpoint(websocket: WebSocket):
                     client_protocol = data.get('protocol', '')
                     versions = (await target_config.get_config()).get("versions")
                     target_version = versions.get(client_protocol, -1)
-                    advertised_count = min(0, metadata.get('useraccounts', 1))
+                    advertised_count = max(0, metadata.get('useraccounts', 1))
 
                     # wenn der client nix schickt nehmen wir an, dass er in ordnung ist
                     if client_version < 0 or target_version < 0 or client_version >= target_version:

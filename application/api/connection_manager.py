@@ -30,5 +30,4 @@ class ConnectionManager:
         return len(self.active_connections)
 
     def advertised_account_count(self):
-        print(self.advertised_accounts)
         return sum(self.advertised_accounts.values())
