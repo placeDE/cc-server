@@ -39,9 +39,8 @@ class Color(Enum):
     WHITE = {"id": 31, "hex": "#ffffff"}
 
 
-
 rgb_to_color = {}
-
+conv_dict = {}
 
 # generate rgb values for all colors
 for color in Color:
@@ -61,7 +60,6 @@ def get_matching_color(rgb) -> Optional[Color]:
     """for color in Color:
         if color.value["rgb"] == rgb:
             return color"""
-
 
 
 """
@@ -103,3 +101,22 @@ Get the closest color available on place to any color for converting any image t
 def get_closest_color(r, g, b) -> Color:
     return min(list(Color), key=lambda color: (r - color.value["rgb"][0]) ** 2 + (g - color.value["rgb"][1]) ** 2 + (
             b - color.value["rgb"][2]) ** 2)
+
+
+def hex_to_rgb(h: str):
+    if len(h) == 7:
+        h = h[1:]
+        return tuple(int(h[i:i + 2], 16) for i in (0, 2, 4))
+    else:
+        return tuple(int(h[i:i + 2], 16) for i in (0, 2, 4))
+
+
+def hex_to_rgba(h: str, translucent: bool):
+    if (h, int(translucent)) in conv_dict:
+        return conv_dict.get((h, int(translucent)))
+    if translucent:
+        v = *hex_to_rgb(h), 40
+    else:
+        v = *hex_to_rgb(h), 255
+    conv_dict.update({(h, int(translucent)): v})
+    return v

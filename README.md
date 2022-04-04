@@ -1,21 +1,49 @@
 ## Client-Server-Kommunikation
 
-- der Client verbindet sich mit dem Server per websocket
-- zu Beginn sendet der client seine Platform und version als json zum server:
-  ```json 
-    {"platform":"python", "version":999}
-    ```
-- sobald der client in 0 Lage ist ein pixel zu setzen schickt dieser ein `request_pixel` an den server
-    - der Server antwortet dann mit dem zu setzenden pixel als json, e.g.:
+- Der Client verbindet sich mit dem Server per Websocket
+- Zu Beginn sendet der client seine Platform und Version als json zum Server:
+
 ```json 
 {
-  "operation":"pixel",
-  "data":{
+  "operation": "handshake",
+  "data": {
+    "platform": "python",
+    "version": 999
+  }
+}
+```
+
+- Sollte der Server feststellen, dass der Client eine alte Version verwendet, sendet er diesem eine Update Aufforderung
+  zurück:
+
+```json 
+{
+  "operation": "notify-update"
+}
+```
+
+- Sobald der Client in der Lage ist ein Pixel zu setzen schickt dieser ein `request-pixel` an den Server
+
+```json 
+{
+  "operation": "request-pixel",
+  "user": "<user-id">"
+}
+ ```
+
+- Der Server antwortet dann mit dem zu setzenden Pixel als json, e.g.:
+
+```json 
+{
+  "operation": "place-pixel",
+  "data": {
     "x": 0,
     "y": 857,
     "color": 4,
     "priority": 1
-    }
+  },
+  "user": "<user-id">"
 }
  ```
-    - wenn kein Pixel existiert, wird `null` zurückgesendet.
+
+- Wenn kein Pixel existiert, wird `{}` zurückgesendet.
