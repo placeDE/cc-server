@@ -18,8 +18,10 @@ BOARD_SIZE_Y = 2000
 
 
 async def image_to_string(image: Image):
+    if not image:
+        return ""
     buffered = BytesIO()
-    image.save(buffered, format="JPEG")
+    image.save(buffered, format="PNG")
     return base64.b64encode(buffered.getvalue())
 
 
@@ -170,8 +172,7 @@ class Canvas:
 
     async def __generate_images(self):
         print("image generation started")
-        correct_image = Image.new(mode="RGBA", size=(2000, 2000),
-                                  color=(0, 0, 0, 0))
+        correct_image = Image.fromarray(self.colors, mode="RGBA")
         wrong_pixel_image = Image.new(mode="RGBA", size=(2000, 2000),
                                       color=(0, 0, 0, 0))
         target_pixel_image = Image.new(mode="RGBA", size=(2000, 2000),
@@ -181,8 +182,6 @@ class Canvas:
                 if px := self.target_configuration.pixel_dict.get((x, y)):
                     correct_image.putpixel((x, y),
                                            hex_to_rgba(get_color_from_index(px['color_index']).value["hex"], False))
-                else:
-                    correct_image.putpixel((x, y), hex_to_rgba(self.colors[x][y].value["hex"], False))
 
                 if px := self.target_configuration.pixel_dict.get((x, y)):
                     if (x, y) in self.mismatched_pixel_dict:
