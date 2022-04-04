@@ -77,9 +77,6 @@ class Canvas:
         if len(mismatched_pixels) == 0:
             return []
 
-        for p in mismatched_pixels:
-            p.update({"priority": [p["priority"][0], p["priority"][1] * random.randint(0, 100) / 100]})
-
         self.mismatched_pixels = list(sorted(mismatched_pixels, key=lambda x: x["priority"]))
         self.mismatched_pixel_dict = mismatched_pixel_dict
 
