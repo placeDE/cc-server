@@ -75,7 +75,7 @@ async def live_endpoint(websocket: WebSocket):
 @app.get('/users/count')
 async def get_users_count():
     return JSONResponse(content={
-        'count': connection_manager.connection_count(),
+        'connections': connection_manager.connection_count(),
         'advertised_accounts': connection_manager.advertised_account_count()
     })
 
