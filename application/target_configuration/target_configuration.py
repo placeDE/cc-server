@@ -4,7 +4,6 @@ import time
 
 import aiohttp
 
-from application import static_stuff
 from application.api.config import ServerConfig
 
 UPDATE_INTERVAL = 60
@@ -55,7 +54,7 @@ class TargetConfiguration:
                 async with session.get(url) as resp:
                     json_data = await resp.json()
                     if resp.status != 200:
-                        print("Error: Could not get config file from " + static_stuff.target_configuration_url)
+                        print("Error: Could not get config file from " + self.settings.remote_config_url)
                         return
 
                     # parse config file

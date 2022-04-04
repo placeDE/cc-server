@@ -10,7 +10,6 @@ import websockets
 from PIL import Image
 
 from application.color import get_matching_color, Color, get_color_from_index
-from application.static_stuff import CANVAS_UPDATE_INTERVAL
 from application.target_configuration.target_configuration import TargetConfiguration
 
 BOARD_SIZE_X = 2000
@@ -95,7 +94,7 @@ class Canvas:
         """
         Fetch the current state of the board/canvas for the requed areas
         """
-        if self.last_update + CANVAS_UPDATE_INTERVAL >= time.time():
+        if self.last_update + self.target_configuration.settings.canvas_update_interval >= time.time():
             return False
         await self.update_access_token()
 
