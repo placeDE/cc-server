@@ -1,6 +1,8 @@
 import asyncio
 import hashlib
 import json
+import sys
+import traceback
 from typing import Dict, Any
 
 import websockets.server
@@ -79,6 +81,8 @@ class Server:
 
         except websockets.ConnectionClosed:
             pass
+        except Exception as e:
+            traceback.print_exception(*sys.exc_info())
         finally:
             self.__client_count -= bot_count
             print(f"{bot_count} Client(s) lost! New bot count: {self.__client_count}")
