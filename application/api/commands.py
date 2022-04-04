@@ -19,7 +19,7 @@ async def handshake():
     pass
 
 
-async def ping():
+def ping():
     return {
         'pong': True
     }
