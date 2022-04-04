@@ -1,7 +1,7 @@
 ## Client-Server-Kommunikation
 
-- Der Client verbindet sich mit dem Server per websocket
-- Zu Beginn sendet der client seine Platform und version als json zum server:
+- Der Client verbindet sich mit dem Server per Websocket
+- Zu Beginn sendet der client seine Platform und Version als json zum Server:
 ```json 
 {
   "operation": "handshake",
@@ -12,14 +12,14 @@
 }
 ```
 
-- Sollte der Server feststellen, dass der Client eine alte Version verwendet, sendet er diesem eine Update aufforderung zurück:
+- Sollte der Server feststellen, dass der Client eine alte Version verwendet, sendet er diesem eine Update Aufforderung zurück:
 ```json 
 {
   "operation": "notify-update"
 }
 ```
 
-- sobald der client in 0 Lage ist ein pixel zu setzen schickt dieser ein `request-pixel` an den server
+- Sobald der Client in der Lage ist ein Pixel zu setzen schickt dieser ein `request-pixel` an den Server
 ```json 
 {
   "operation": "request-pixel",
@@ -27,7 +27,7 @@
 }
  ```
 
-- der Server antwortet dann mit dem zu setzenden pixel als json, e.g.:
+- Der Server antwortet dann mit dem zu setzenden Pixel als json, e.g.:
 ```json 
 {
   "operation": "place-pixel",
@@ -41,4 +41,4 @@
 }
  ```
 
-- wenn kein Pixel existiert, wird `{}` zurückgesendet.
+- Wenn kein Pixel existiert, wird `{}` zurückgesendet.
