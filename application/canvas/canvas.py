@@ -18,9 +18,11 @@ BOARD_SIZE_Y = 2000
 
 
 async def image_to_string(image: Image):
+    if not image:
+        return ""
     buffered = BytesIO()
-    image.save(buffered, format="JPEG")
-    return base64.b64encode(buffered.getvalue())
+    image.save(buffered, format="PNG")
+    return base64.b64encode(buffered.getvalue()).decode()
 
 
 class Canvas:
@@ -75,10 +77,7 @@ class Canvas:
         if len(mismatched_pixels) == 0:
             return []
 
-        for p in mismatched_pixels:
-            p.update({"priority": [p["priority"][0], p["priority"][1] * random.randint(0, 100) / 100]})
-
-        self.mismatched_pixels = list(sorted(mismatched_pixels, key=lambda x: x["priority"]))
+        self.mismatched_pixels = list(sorted(mismatched_pixels, key=lambda x: x["priority"], reverse=True))
         self.mismatched_pixel_dict = mismatched_pixel_dict
 
     async def __update_access_token(self):
@@ -170,29 +169,36 @@ class Canvas:
 
     async def __generate_images(self):
         print("image generation started")
-        correct_image = Image.new(mode="RGBA", size=(2000, 2000),
-                                       color=(0, 0, 0, 0))
+        #correct_image = Image.new(mode="RGBA", size=(2000, 2000),
+        #                              color=(0, 0, 0, 0))
         wrong_pixel_image = Image.new(mode="RGBA", size=(2000, 2000),
-                                           color=(0, 0, 0, 0))
+                                      color=(0, 0, 0, 0))
         target_pixel_image = Image.new(mode="RGBA", size=(2000, 2000),
-                                            color=(0, 0, 0, 0))
+                                       color=(0, 0, 0, 0))
         for x in range(2000):
             for y in range(2000):
-                if px := self.target_configuration.pixel_dict.get((x, y)):
-                    correct_image.putpixel((x, y), hex_to_rgba(get_color_from_index(px['color_index']).value["hex"], False))
+                """if px := self.target_configuration.pixel_dict.get((x, y)):
+                    correct_image.putpixel((x, y),
+                                           hex_to_rgba(get_color_from_index(px['color_index']).value["hex"], False))
                 else:
-                    correct_image.putpixel((x, y), hex_to_rgba(self.colors[x][y].value["hex"], False))
+                    correct_image.putpixel((x, y), hex_to_rgba(self.colors[x][y].value["hex"], False))"""
 
                 if px := self.target_configuration.pixel_dict.get((x, y)):
                     if (x, y) in self.mismatched_pixel_dict:
-                        wrong_pixel_image.putpixel((x, y), hex_to_rgba(get_color_from_index(px['color_index']).value["hex"], False))
+                        wrong_pixel_image.putpixel((x, y),
+                                                   hex_to_rgba(get_color_from_index(px['color_index']).value["hex"],
+                                                               False))
                     else:
-                        wrong_pixel_image.putpixel((x, y), hex_to_rgba(get_color_from_index(px['color_index']).value["hex"], True))
+                        wrong_pixel_image.putpixel((x, y),
+                                                   hex_to_rgba(get_color_from_index(px['color_index']).value["hex"],
+                                                               True))
 
                 if px := self.target_configuration.pixel_dict.get((x, y)):
-                    target_pixel_image.putpixel((x, y), hex_to_rgba(get_color_from_index(px['color_index']).value["hex"], False))
+                    target_pixel_image.putpixel((x, y),
+                                                hex_to_rgba(get_color_from_index(px['color_index']).value["hex"],
+                                                            False))
 
-        self.correct_image = correct_image
+        #self.correct_image = correct_image
         self.wrong_pixel_image = wrong_pixel_image
         self.target_pixel_image = target_pixel_image
 
@@ -219,7 +225,7 @@ class Canvas:
         Fetch the current state of the board/canvas for the requed areas
         """
         if self.last_update + self.target_configuration.settings.canvas_update_interval >= time.time():
-            return False
+            return
         await self.__update_access_token()
 
         results = []
@@ -239,5 +245,5 @@ class Canvas:
 
             print("Board updated!")
 
+        await self.__calculate_mismatched_pixels()
         await self.__generate_images()
-        return True

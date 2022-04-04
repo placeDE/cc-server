@@ -23,7 +23,7 @@ class TargetConfiguration:
         self.settings = settings
         self.pixel_dict = {}
 
-    async def get_config(self, ignore_time: bool = False):
+    async def get_config(self, ignore_time: bool = False) -> dict:
         """
         Get the config and refresh it first if necessary
         """
@@ -38,10 +38,14 @@ class TargetConfiguration:
             for s in self.config["structures"].values():
                 prio = (priorities.get(str(s.get("priority"))) or 0) * random.randint(0, 100) / 100
                 for p in s.get("pixels"):
-                    px = {"x": p["x"], "y": p["y"], "color_index": p["color"],
-                                "priority": [prio, priorities.get(str(p.get("priority"))) or 0]}
+                    px = {
+                        "x": p["x"], "y": p["y"],
+                        "color_index": p["color"],
+                          "priority": (prio, (priorities.get(str(p.get("priority"))) or 0) * random.randint(0, 100) / 100)
+                    }
                     lst.append(px)
                     self.pixel_dict.update({(p["x"], p["y"]): px})
+            #random.shuffle(lst)
             self.pixels = lst
 
         return self.config
