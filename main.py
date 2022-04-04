@@ -6,6 +6,7 @@ import traceback
 
 from fastapi import FastAPI, WebSocket
 from fastapi.responses import JSONResponse
+from starlette.middleware.cors import CORSMiddleware
 
 from application.api.commands import get_pixel_data, ping
 from application.api.config import ServerConfig
@@ -14,6 +15,16 @@ from application.canvas.canvas import Canvas
 from application.target_configuration.target_configuration import TargetConfiguration
 
 app = FastAPI()
+
+origins = ["*"]
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=origins,
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
+
 connection_manager = ConnectionManager()
 
 config = ServerConfig()
