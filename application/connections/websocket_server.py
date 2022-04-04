@@ -1,10 +1,8 @@
 import asyncio
 import hashlib
 import json
-import math
 from typing import Dict, Any
 
-import imath
 import websockets.server
 from websockets import serve
 from websockets.server import WebSocketServerProtocol
