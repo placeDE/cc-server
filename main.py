@@ -75,7 +75,7 @@ async def live_endpoint(websocket: WebSocket):
                 elif op == 'handshake':
                     metadata = data.get('data', {})
 
-                    client_version = data.get('version', -1)
+                    client_version = data.get('version', 0)
                     client_protocol = data.get('protocol', '')
                     versions = (await target_config.get_config()).get("versions")
                     target_version = versions.get(client_protocol, -1)
