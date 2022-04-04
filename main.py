@@ -3,6 +3,7 @@ import hashlib
 import json
 import sys
 import traceback
+from uuid import uuid4
 
 from fastapi import FastAPI, WebSocket
 from fastapi.responses import JSONResponse
@@ -52,7 +53,8 @@ async def startup():
 
 @app.websocket('/')
 async def live_endpoint(websocket: WebSocket):
-    await connection_manager.connect(websocket)
+    uuid = str(uuid4())
+    await connection_manager.connect(uuid, websocket)
 
     try:
         while True:
@@ -73,7 +75,7 @@ async def live_endpoint(websocket: WebSocket):
                 elif op == 'handshake':
                     metadata = data.get('data', {})
 
-                    client_version = data.get('version', -1)
+                    client_version = data.get('version', 0)
                     client_protocol = data.get('protocol', '')
                     versions = (await target_config.get_config()).get("versions")
                     target_version = versions.get(client_protocol, -1)
@@ -88,7 +90,7 @@ async def live_endpoint(websocket: WebSocket):
                                 'version': target_version
                             }
                         )
-                    connection_manager.set_advertised_accounts(websocket, advertised_count)
+                    connection_manager.set_advertised_accounts(uuid, advertised_count)
                 elif op == 'ping':
                     response = ping()
 
@@ -97,7 +99,7 @@ async def live_endpoint(websocket: WebSocket):
     except:
         pass
     finally:
-        connection_manager.disconnect(websocket)
+        connection_manager.disconnect(uuid, websocket)
 
 
 @app.get('/users/count')
