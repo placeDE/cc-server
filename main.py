@@ -2,12 +2,12 @@ import asyncio
 import hashlib
 import json
 
-from fastapi import FastAPI, WebSocket, WebSocketDisconnect
+from fastapi import FastAPI, WebSocket
 from fastapi.responses import JSONResponse
 
 from application.api.commands import request_pixel, ping
-from application.api.connection_manager import ConnectionManager
 from application.api.config import ServerConfig
+from application.api.connection_manager import ConnectionManager
 from application.canvas.canvas import Canvas
 from application.target_configuration.target_configuration import TargetConfiguration
 
@@ -16,13 +16,13 @@ connection_manager = ConnectionManager()
 
 config = ServerConfig()
 canvas: Canvas
-versions: dict
+target_config: TargetConfiguration
+
 
 async def update_canvas(monalisa: Canvas):
     while True:
         try:
-            if await monalisa.update_board():
-                await monalisa.__calculate_mismatched_pixels()
+            await monalisa.update_board()
             await asyncio.sleep(10)
         finally:
             print('There was an error updating the canvas.')
@@ -30,10 +30,8 @@ async def update_canvas(monalisa: Canvas):
 
 @app.on_event('startup')
 async def startup():
-    global canvas
-    global versions
+    global canvas, target_config
     target_config = TargetConfiguration(config)
-    versions = target_config.versions
     canvas = Canvas(target_config)
     print('Scheduling canvas update')
     asyncio.create_task(update_canvas(canvas))
@@ -61,6 +59,7 @@ async def live_endpoint(websocket: WebSocket):
 
                     client_version = data.get('version', -1)
                     client_protocol = data.get('protocol', '')
+                    versions = (await target_config.get_config()).get("versions")
                     target_version = versions.get(client_protocol, -1)
                     advertised_count = min(0, metadata.get('useraccounts', 1))
 
@@ -103,15 +102,16 @@ async def get_pixels_count():
 @app.get('/pixel/get_images')
 async def get_users_count():
     return JSONResponse(content={
-       await canvas.get_images_as_json()
+        await canvas.get_images_as_json()
     })
 
 
 @app.get('/test')
 async def get_users_count():
     return JSONResponse(content={
-       canvas.mismatched_pixels
+        canvas.mismatched_pixels
     })
+
 
 def format_response(op: str, user: str, data: any):
     return {

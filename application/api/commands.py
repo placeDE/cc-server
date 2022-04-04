@@ -1,4 +1,3 @@
-from application.api.config import ServerConfig
 from application.canvas.canvas import Canvas
 from application.color import get_color_from_index
 

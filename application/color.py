@@ -39,9 +39,7 @@ class Color(Enum):
     WHITE = {"id": 31, "hex": "#ffffff"}
 
 
-
 rgb_to_color = {}
-
 
 # generate rgb values for all colors
 for color in Color:
@@ -61,7 +59,6 @@ def get_matching_color(rgb) -> Optional[Color]:
     """for color in Color:
         if color.value["rgb"] == rgb:
             return color"""
-
 
 
 """
