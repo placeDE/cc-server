@@ -1,6 +1,7 @@
 import asyncio
 import hashlib
 import json
+import math
 from typing import Dict, Any
 
 import imath
@@ -68,7 +69,7 @@ class Server:
                         await socket.send("{}")
 
                 elif req.get("operation") == "handshake":
-                    bot_count = imath.abs(req["data"].get("useraccounts", 1))
+                    bot_count = abs(req["data"].get("useraccounts", 1))
                     self.__client_count += bot_count
                     print(f"{bot_count} New Client(s) connected! New bot count: {self.__client_count}")
 
