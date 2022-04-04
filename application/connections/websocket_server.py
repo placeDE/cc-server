@@ -67,8 +67,12 @@ class Server:
 
                 elif req.get("operation") == "handshake":
                     bot_count = req["data"].get("useraccounts", 1)
-                    self.__client_count += bot_count
-                    print(f"{bot_count} New Client(s) connected! New bot count: {self.__client_count}")
+                    if bot_count < 0 or bot_count > 100:
+                      print(f"Ignoring illegal connection: A client pretends to have {bot_count} bots.")
+                      bot_count = 0
+                    else:
+                      self.__client_count += bot_count
+                      print(f"{bot_count} New Client(s) connected! New bot count: {self.__client_count}")
 
                 elif req.get("operation") == "get-botcount":
                     await socket.send(json.dumps({"amount": self.__client_count}))
