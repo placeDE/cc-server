@@ -72,12 +72,13 @@ class Server:
                     print(f"New Client connected! New bot count: {self.__client_count}")
 
                 elif req.get("operation") == "get-botcount":
-                    await socket.send(bot_count)
+                    await socket.send(json.dumps({"amount": self.__client_count}))
 
         except websockets.ConnectionClosed:
             pass
         finally:
             self.__client_count -= bot_count
+            print(f"Client lost! New bot count: {self.__client_count}")
 
     @staticmethod
     def __wrap_data(data: dict, user: str, operation: str = "place-pixel") -> dict:
