@@ -125,9 +125,9 @@ async def get_users_count():
 
 @app.get('/test')
 async def get_users_count():
-    return JSONResponse(content={
+    return JSONResponse(content=
         canvas.mismatched_pixels
-    })
+    )
 
 
 def format_response(op: str, user: str, data: any):
