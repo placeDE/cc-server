@@ -248,5 +248,5 @@ class Canvas:
 
             print("Board updated!")
 
-        #await self.__calculate_mismatched_pixels()
-        await self.__generate_images()
+        await self.__calculate_mismatched_pixels()
+        #await self.__generate_images()
