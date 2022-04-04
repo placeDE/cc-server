@@ -14,7 +14,7 @@ from application.api.connection_manager import ConnectionManager
 from application.canvas.canvas import Canvas
 from application.target_configuration.target_configuration import TargetConfiguration
 
-app = FastAPI(debug=True)
+app = FastAPI()
 
 origins = ["*"]
 app.add_middleware(
