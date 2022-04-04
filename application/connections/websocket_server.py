@@ -63,7 +63,7 @@ class Server:
 
                         await socket.send(json.dumps(Server.__wrap_data(data, req.get("user", ""))))
                     else:
-                        await socket.send("null")
+                        await socket.send("{}")
 
                 elif req.get("operation") == "handshake":
                     bot_count = req["data"].get("useraccounts", 1)
