@@ -40,6 +40,7 @@ class Color(Enum):
 
 
 rgb_to_color = {}
+conv_dict = {}
 
 # generate rgb values for all colors
 for color in Color:
@@ -111,7 +112,11 @@ def hex_to_rgb(h: str):
 
 
 def hex_to_rgba(h: str, translucent: bool):
+    if (h, int(translucent)) in conv_dict:
+        return conv_dict.get((h, int(translucent)))
     if translucent:
-        return *hex_to_rgb(h), 128
+        v = *hex_to_rgb(h), 128
     else:
-        return *hex_to_rgb(h), 255
+        v = *hex_to_rgb(h), 255
+    conv_dict.update({(h, int(translucent)): v})
+    return v

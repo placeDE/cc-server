@@ -176,6 +176,7 @@ class Canvas:
                                       color=(0, 0, 0, 0))
         target_pixel_image = Image.new(mode="RGBA", size=(2000, 2000),
                                        color=(0, 0, 0, 0))
+        print("created pictures")
         for x in range(2000):
             for y in range(2000):
                 if px := self.target_configuration.pixel_dict.get((x, y)):
