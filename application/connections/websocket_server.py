@@ -73,6 +73,9 @@ class Server:
                 elif req.get("operation") == "get-botcount":
                     await socket.send(json.dumps({"amount": self.__client_count}))
 
+                elif req.get("operation") == "ping":
+                    await socket.send(json.dumps({"pong": True}))
+
         except websockets.ConnectionClosed:
             pass
         finally:
