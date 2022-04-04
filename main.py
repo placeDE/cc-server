@@ -22,8 +22,8 @@ async def update_canvas(monalisa: Canvas):
     while True:
         try:
             if await monalisa.update_board():
-                await monalisa.calculate_mismatched_pixels()
-            await asyncio.sleep(30)
+                await monalisa.__calculate_mismatched_pixels()
+            await asyncio.sleep(10)
         finally:
             print('There was an error updating the canvas.')
 
@@ -37,7 +37,7 @@ async def startup():
     asyncio.create_task(update_canvas(canvas))
 
 
-@app.websocket('/live')
+@app.websocket('/')
 async def live_endpoint(websocket: WebSocket):
     await connection_manager.connect(websocket)
 
@@ -45,8 +45,7 @@ async def live_endpoint(websocket: WebSocket):
         while True:
             data = await websocket.receive_json()
             print(f'RX: {json.dumps(data)}')
-            if 'operation' in data:
-                op = data['operation']
+            if op := data.get("operation"):
                 response = None
 
                 if op == 'request-pixel':
@@ -57,7 +56,7 @@ async def live_endpoint(websocket: WebSocket):
                     )
                 elif op == 'handshake':
                     metadata = data.get('data', {})
-                    advertised_count = metadata.get('useraccounts', 1)
+                    advertised_count = min(0, metadata.get('useraccounts', 1))
                     if not version_check(config, metadata):
                         response = format_response(
                             'notify-update',
@@ -66,14 +65,12 @@ async def live_endpoint(websocket: WebSocket):
                                 'min_version', config.min_version
                             }
                         )
-                        await websocket.close(4001)
-                        return
+                        await websocket.send_json(response)
+                        #await websocket.close(4001) FIXME
+                        #return
                     connection_manager.set_advertised_accounts(websocket, advertised_count)
                 elif op == 'ping':
                     response = ping()
-                # eigtl. durch /users/count deprecated
-                elif op == 'get-botcount' and password_check(data.get("pw", '')):
-                    response = {'amount': connection_manager.advertised_account_count()}
 
                 if response is not None:
                     print(f'TX: {json.dumps(response)}')
@@ -90,6 +87,27 @@ async def get_users_count():
     })
 
 
+@app.get('/pixel/amount')
+async def get_pixels_count():
+    return JSONResponse(content={
+        'mismatched': await canvas.get_wrong_pixel_amount(),
+        'all': len(await canvas.target_configuration.get_pixels(True))
+    })
+
+
+@app.get('/pixel/get_images')
+async def get_users_count():
+    return JSONResponse(content={
+       await canvas.get_images_as_json()
+    })
+
+
+@app.get('/test')
+async def get_users_count():
+    return JSONResponse(content={
+       canvas.mismatched_pixels
+    })
+
 def format_response(op: str, user: str, data: any):
     return {
         'operation': op,
@@ -100,4 +118,4 @@ def format_response(op: str, user: str, data: any):
 
 def password_check(password):
     return hashlib.sha3_512(
-        password.encode()).hexdigest() == "bea976c455d292fdd15256d3263cb2b70f051337f134b0fa9678d5eb206b4c45ebd213694af9cf6118700fc8488809be9195c7eae44a882c6be519ba09b68e47"
+        password.encode()).hexdigest() == config.admin_password

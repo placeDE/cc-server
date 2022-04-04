@@ -103,3 +103,18 @@ Get the closest color available on place to any color for converting any image t
 def get_closest_color(r, g, b) -> Color:
     return min(list(Color), key=lambda color: (r - color.value["rgb"][0]) ** 2 + (g - color.value["rgb"][1]) ** 2 + (
             b - color.value["rgb"][2]) ** 2)
+
+
+def hex_to_rgb(h: str):
+    if len(h) == 7:
+        h = h[1:]
+        return tuple(int(h[i:i + 2], 16) for i in (0, 2, 4))
+    else:
+        return tuple(int(h[i:i + 2], 16) for i in (0, 2, 4))
+
+
+def hex_to_rgba(h: str, translucent: bool):
+    if translucent:
+        return *hex_to_rgb(h), 128
+    else:
+        return *hex_to_rgb(h), 255

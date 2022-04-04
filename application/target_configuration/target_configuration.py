@@ -20,7 +20,7 @@ class TargetConfiguration:
         self.config = {}
         self.pixels = []
         self.settings = settings
-        print(settings)
+        self.pixel_dict = {}
 
     async def get_config(self, ignore_time: bool = False):
         """
@@ -31,12 +31,15 @@ class TargetConfiguration:
             self.last_update = time.time()
 
             lst = []
+            self.pixel_dict = {}
             priorities = self.config["priorities"]
             for s in self.config["structures"].values():
                 prio = (priorities.get(str(s.get("priority"))) or 0) * random.randint(0, 100) / 100
                 for p in s.get("pixels"):
-                    lst.append({"x": p["x"], "y": p["y"], "color_index": p["color"],
-                                "priority": [prio, priorities.get(str(p.get("priority"))) or 0]})
+                    px = {"x": p["x"], "y": p["y"], "color_index": p["color"],
+                                "priority": [prio, priorities.get(str(p.get("priority"))) or 0]}
+                    lst.append(px)
+                    self.pixel_dict.update({(p["x"], p["y"]): px})
             self.pixels = lst
 
         return self.config
@@ -64,6 +67,6 @@ class TargetConfiguration:
             with open(url, "r") as f:
                 self.config = json.load(f)
 
-    async def get_pixels(self):
-        await self.get_config()
+    async def get_pixels(self, ignore_time: bool = False):
+        await self.get_config(ignore_time)
         return self.pixels

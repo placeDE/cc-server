@@ -1,4 +1,5 @@
 import asyncio
+import base64
 import json
 import random
 import re
@@ -9,11 +10,17 @@ import aiohttp
 import websockets
 from PIL import Image
 
-from application.color import get_matching_color, Color, get_color_from_index
+from application.color import get_matching_color, Color, get_color_from_index, hex_to_rgba
 from application.target_configuration.target_configuration import TargetConfiguration
 
 BOARD_SIZE_X = 2000
 BOARD_SIZE_Y = 2000
+
+
+async def image_to_string(image: Image):
+    buffered = BytesIO()
+    image.save(buffered, format="JPEG")
+    return base64.b64encode(buffered.getvalue())
 
 
 class Canvas:
@@ -22,8 +29,12 @@ class Canvas:
         self.last_update = 0
         self.colors = []  # 2D array of the entire board (BOARD_SIZE_X x BOARD_SIZE_Y), Color objects
         self.mismatched_pixels = []
+        self.mismatched_pixel_dict = {}
         self.lock = asyncio.Lock()
         self.target_configuration: TargetConfiguration = target_configuration
+        self.correct_image = None
+        self.wrong_pixel_image = None
+        self.target_pixel_image = None
 
         # Fill with white preset
         for x in range(BOARD_SIZE_X):
@@ -32,7 +43,7 @@ class Canvas:
                 column.append(Color.WHITE)
             self.colors.append(column)
 
-    async def update_image(self, raw_image, offset_x, offset_y):
+    async def __update_image(self, raw_image, offset_x, offset_y):
         self.last_update = time.time()
 
         image = Image.open(raw_image)
@@ -43,13 +54,14 @@ class Canvas:
             for x in range(image.width):
                 self.colors[x + offset_x][y + offset_y] = get_matching_color(image_data[x, y])
 
-    def get_pixel_color(self, x: int, y: int) -> Color:
+    def __get_pixel_color(self, x: int, y: int) -> Color:
         return self.colors[x][y]
 
-    async def calculate_mismatched_pixels(self):
+    async def __calculate_mismatched_pixels(self):
         mismatched_pixels = []
+        mismatched_pixel_dict = {}
         for target_pixel in await self.target_configuration.get_pixels():
-            current_color = self.get_pixel_color(target_pixel["x"], target_pixel["y"])
+            current_color = self.__get_pixel_color(target_pixel["x"], target_pixel["y"])
             if current_color is None:
                 print("Couldn't determine color for pixel at " + str(target_pixel["x"]) + ", " + str(target_pixel["y"]))
                 continue
@@ -58,6 +70,7 @@ class Canvas:
                     or current_color.value["id"] != target_pixel["color_index"] \
                     and get_color_from_index(target_pixel["color_index"]):
                 mismatched_pixels.append(target_pixel)
+                mismatched_pixel_dict.update({(target_pixel["x"], target_pixel["y"]): target_pixel})
 
         if len(mismatched_pixels) == 0:
             return []
@@ -66,14 +79,9 @@ class Canvas:
             p.update({"priority": [p["priority"][0], p["priority"][1] * random.randint(0, 100) / 100]})
 
         self.mismatched_pixels = list(sorted(mismatched_pixels, key=lambda x: x["priority"]))
+        self.mismatched_pixel_dict = mismatched_pixel_dict
 
-    async def pop_mismatched_pixel(self):
-        async with self.lock:
-            if len(self.mismatched_pixels) > 0:
-                return self.mismatched_pixels.pop(0)
-            return False
-
-    async def update_access_token(self):
+    async def __update_access_token(self):
         """
         Fetch a valid AccessToken
         """
@@ -90,34 +98,7 @@ class Canvas:
                 else:
                     print("No token!")
 
-    async def update_board(self):
-        """
-        Fetch the current state of the board/canvas for the requed areas
-        """
-        if self.last_update + self.target_configuration.settings.canvas_update_interval >= time.time():
-            return False
-        await self.update_access_token()
-
-        results = []
-
-        if (to_update := (await self.target_configuration.get_config(True)).get(
-                "canvases_enabled")) is None:  # the configuration can disable some canvases to reduce load
-            # by default, use all (2 at the moment)
-            to_update = [0, 1, 2, 3]
-
-        for canvas_id in to_update:
-            await self.update_canvas(canvas_id, results)
-
-        async with self.lock:
-            for r in results:
-                # Tell the board to update with the offset of the current canvas
-                await self.update_image(*r)
-
-            print("Board updated!")
-
-            return True
-
-    async def update_canvas(self, canvas_id, lst):
+    async def __update_canvas(self, canvas_id, lst):
         """
         Connects a websocket and sends a request to the server for the current state of the board
         Uses the returned URL to request the actual image using HTTP
@@ -186,3 +167,77 @@ class Canvas:
 
         except Exception as e:  # reddit closes the connection sometimes
             print(e)
+
+    async def __generate_images(self):
+        print("image generation started")
+        correct_image = Image.new(mode="RGBA", size=(2000, 2000),
+                                       color=(0, 0, 0, 0))
+        wrong_pixel_image = Image.new(mode="RGBA", size=(2000, 2000),
+                                           color=(0, 0, 0, 0))
+        target_pixel_image = Image.new(mode="RGBA", size=(2000, 2000),
+                                            color=(0, 0, 0, 0))
+        for x in range(2000):
+            for y in range(2000):
+                if px := self.target_configuration.pixel_dict.get((x, y)):
+                    correct_image.putpixel((x, y), hex_to_rgba(get_color_from_index(px['color_index']).value["hex"], False))
+                else:
+                    correct_image.putpixel((x, y), hex_to_rgba(self.colors[x][y].value["hex"], False))
+
+                if px := self.target_configuration.pixel_dict.get((x, y)):
+                    if (x, y) in self.mismatched_pixel_dict:
+                        wrong_pixel_image.putpixel((x, y), hex_to_rgba(get_color_from_index(px['color_index']).value["hex"], False))
+                    else:
+                        wrong_pixel_image.putpixel((x, y), hex_to_rgba(get_color_from_index(px['color_index']).value["hex"], True))
+
+                if px := self.target_configuration.pixel_dict.get((x, y)):
+                    target_pixel_image.putpixel((x, y), hex_to_rgba(get_color_from_index(px['color_index']).value["hex"], False))
+
+        self.correct_image = correct_image
+        self.wrong_pixel_image = wrong_pixel_image
+        self.target_pixel_image = target_pixel_image
+
+        print("image generation finished")
+
+    async def pop_mismatched_pixel(self):
+        async with self.lock:
+            if len(self.mismatched_pixels) > 0:
+                return self.mismatched_pixels.pop(0)
+            return False
+
+    async def get_wrong_pixel_amount(self):
+        return len(self.mismatched_pixels)
+
+    async def get_images_as_json(self):
+        return {
+            'reddit': await image_to_string(self.correct_image),
+            'wrong': await image_to_string(self.wrong_pixel_image),
+            'config': await image_to_string(self.target_pixel_image)
+        }
+
+    async def update_board(self):
+        """
+        Fetch the current state of the board/canvas for the requed areas
+        """
+        if self.last_update + self.target_configuration.settings.canvas_update_interval >= time.time():
+            return False
+        await self.__update_access_token()
+
+        results = []
+
+        if (to_update := (await self.target_configuration.get_config(True)).get(
+                "canvases_enabled")) is None:  # the configuration can disable some canvases to reduce load
+            # by default, use all (2 at the moment)
+            to_update = [0, 1, 2, 3]
+
+        for canvas_id in to_update:
+            await self.__update_canvas(canvas_id, results)
+
+        async with self.lock:
+            for r in results:
+                # Tell the board to update with the offset of the current canvas
+                await self.__update_image(*r)
+
+            print("Board updated!")
+
+        await self.__generate_images()
+        return True
