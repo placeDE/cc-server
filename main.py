@@ -82,7 +82,7 @@ async def live_endpoint(websocket: WebSocket):
                     advertised_count = max(0, metadata.get('useraccounts', 1))
 
                     # wenn der client nix schickt nehmen wir an, dass er in ordnung ist
-                    if client_version < 0 or target_version < 0 or client_version < target_version:
+                    if client_version < target_version:
                         response = format_response(
                             'notify-update',
                             data.get('user', ''),
