@@ -75,10 +75,10 @@ async def live_endpoint(websocket: WebSocket):
                 elif op == 'handshake':
                     metadata = data.get('data', {})
 
-                    client_version = data.get('version', 0)
-                    client_protocol = data.get('protocol', '')
+                    client_version = metadata.get('version', 0)
+                    client_platform = metadata.get('platform', '')
                     versions = (await target_config.get_config()).get("versions")
-                    target_version = versions.get(client_protocol, -1)
+                    target_version = versions.get(client_platform, -1)
                     advertised_count = max(0, metadata.get('useraccounts', 1))
 
                     # wenn der client nix schickt nehmen wir an, dass er in ordnung ist
