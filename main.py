@@ -7,7 +7,7 @@ import traceback
 from fastapi import FastAPI, WebSocket
 from fastapi.responses import JSONResponse
 
-from application.api.commands import request_pixel, ping
+from application.api.commands import get_pixel_data, ping
 from application.api.config import ServerConfig
 from application.api.connection_manager import ConnectionManager
 from application.canvas.canvas import Canvas
@@ -53,11 +53,15 @@ async def live_endpoint(websocket: WebSocket):
                 response = None
 
                 if op == 'request-pixel':
-                    response = format_response(
-                        'place-pixel',
-                        data.get('user', ''),
-                        await request_pixel(canvas)
-                    )
+                    pixel = await canvas.pop_mismatched_pixel()
+                    if pixel:
+                        response = format_response(
+                            'place-pixel',
+                            data.get('user', ''),
+                            await get_pixel_data(pixel)
+                        )
+                    else:
+                        response = {}
                 elif op == 'handshake':
                     metadata = data.get('data', {})
 
