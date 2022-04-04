@@ -67,7 +67,7 @@ class Server:
                         await socket.send("null")
 
                 elif req.get("operation") == "handshake":
-                    bot_count = req["data"].get("useraccounts", 1)
+                    bot_count = req["data"].get("useraccounts", 0) or req["data"].get("accounts", 1)
                     self.__client_count += bot_count
                     print(f"New Client connected! New bot count: {self.__client_count}")
 
