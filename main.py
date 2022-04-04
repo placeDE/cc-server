@@ -120,9 +120,9 @@ async def get_pixels_count():
 
 @app.get('/pixel/get_images')
 async def get_users_count():
-    return JSONResponse(content={
-        await canvas.get_images_as_json()
-    })
+    return JSONResponse(content=
+                        await canvas.get_images_as_json()
+                        )
 
 
 @app.get('/test')
