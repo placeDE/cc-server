@@ -16,8 +16,10 @@ class ConnectionManager:
         self.advertised_accounts[uuid] = count
 
     def disconnect(self, uuid: str, websocket: WebSocket):
-        self.active_connections.remove((websocket, uuid))
-        self.advertised_accounts.pop(uuid)
+        if (websocket, uuid) in self.active_connections:
+            self.active_connections.remove((websocket, uuid))
+        if uuid in self.advertised_accounts:
+            self.advertised_accounts.pop(uuid)
 
     async def send_message_to(self, message: str, websocket: WebSocket):
         await websocket.send_text(message)
