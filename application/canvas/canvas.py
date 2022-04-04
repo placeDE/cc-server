@@ -210,9 +210,7 @@ class Canvas:
     async def pop_mismatched_pixel(self):
         async with self.lock:
             if len(self.mismatched_pixels) > 0:
-                px = self.mismatched_pixels.pop(0)
-                print(px)
-                return px
+                return self.mismatched_pixels.pop(0)
             return False
 
     async def get_wrong_pixel_amount(self):

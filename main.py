@@ -64,10 +64,12 @@ async def live_endpoint(websocket: WebSocket):
                 if op == 'request-pixel':
                     pixel = await canvas.pop_mismatched_pixel()
                     if pixel:
+                        px = await get_pixel_data(pixel)
                         response = format_response(
                             'place-pixel',
                             data.get('user', ''),
-                            await get_pixel_data(pixel)
+                            #await get_pixel_data(pixel)
+                            px
                         )
                     else:
                         response = {}
@@ -118,9 +120,7 @@ async def get_pixels_count():
 
 @app.get('/pixel/get_images')
 async def get_users_count():
-    return JSONResponse(content=
-                        await canvas.get_images_as_json()
-                        )
+    return JSONResponse(content=await canvas.get_images_as_json())
 
 
 @app.get('/test')
