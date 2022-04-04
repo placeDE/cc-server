@@ -18,6 +18,7 @@ class TargetConfiguration:
     def __init__(self, settings: ServerConfig):
         self.last_update = 0
         self.config = {}
+        self.versions = {}
         self.pixels = []
         self.settings = settings
         self.pixel_dict = {}
@@ -31,6 +32,7 @@ class TargetConfiguration:
             self.last_update = time.time()
 
             lst = []
+            self.versions = self.config["versions"]
             self.pixel_dict = {}
             priorities = self.config["priorities"]
             for s in self.config["structures"].values():
