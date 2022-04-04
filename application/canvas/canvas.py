@@ -22,7 +22,7 @@ async def image_to_string(image: Image):
         return ""
     buffered = BytesIO()
     image.save(buffered, format="PNG")
-    return base64.b64encode(buffered.getvalue())
+    return base64.b64encode(buffered.getvalue()).decode()
 
 
 class Canvas:
