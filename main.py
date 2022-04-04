@@ -85,7 +85,7 @@ async def live_endpoint(websocket: WebSocket):
                             'notify-update',
                             data.get('user', ''),
                             {
-                                'version', target_version
+                                'version': target_version
                             }
                         )
                     connection_manager.set_advertised_accounts(websocket, advertised_count)
