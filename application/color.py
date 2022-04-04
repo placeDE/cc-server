@@ -115,7 +115,7 @@ def hex_to_rgba(h: str, translucent: bool):
     if (h, int(translucent)) in conv_dict:
         return conv_dict.get((h, int(translucent)))
     if translucent:
-        v = *hex_to_rgb(h), 60
+        v = *hex_to_rgb(h), 30
     else:
         v = *hex_to_rgb(h), 255
     conv_dict.update({(h, int(translucent)): v})
