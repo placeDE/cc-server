@@ -64,15 +64,11 @@ async def live_endpoint(websocket: WebSocket):
                 if op == 'request-pixel':
                     pixel = await canvas.pop_mismatched_pixel()
                     if pixel:
-                        px = await get_pixel_data(pixel)
-                        print(px)
                         response = format_response(
                             'place-pixel',
                             data.get('user', ''),
-                            #await get_pixel_data(pixel),
-                            px
+                            await get_pixel_data(pixel)
                         )
-                        print(response)
                     else:
                         response = {}
                 elif op == 'handshake':
@@ -99,6 +95,7 @@ async def live_endpoint(websocket: WebSocket):
 
                 if response is not None:
                     print(f'TX: {json.dumps(response)}')
+                    print(response)
                     await websocket.send_json(response)
     finally:
         connection_manager.disconnect(websocket)
