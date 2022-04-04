@@ -67,7 +67,7 @@ async def live_endpoint(websocket: WebSocket):
                             }
                         )
                         await websocket.close(4001)
-                        raise Exception('Client outdated, disconnecting websocket')
+                        return
                     connection_manager.set_advertised_accounts(websocket, advertised_count)
                 elif op == 'ping':
                     response = ping()
