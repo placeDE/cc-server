@@ -93,7 +93,6 @@ async def live_endpoint(websocket: WebSocket):
                     response = ping()
 
                 if response is not None:
-                    print(response)
                     await websocket.send_json(response)
     except:
         pass
