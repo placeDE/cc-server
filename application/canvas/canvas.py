@@ -77,7 +77,7 @@ class Canvas:
         if len(mismatched_pixels) == 0:
             return []
 
-        self.mismatched_pixels = list(sorted(mismatched_pixels, key=lambda x: x["priority"]))
+        self.mismatched_pixels = list(sorted(mismatched_pixels, key=lambda x: x["priority"], reverse=True))
         self.mismatched_pixel_dict = mismatched_pixel_dict
 
     async def __update_access_token(self):
