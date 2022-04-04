@@ -20,9 +20,13 @@ canvas: Canvas
 
 
 async def update_canvas(monalisa: Canvas):
-    if await monalisa.update_board():
-        await monalisa.calculate_mismatched_pixels()
-    await asyncio.sleep(30)
+    while True:
+        try:
+            if await monalisa.update_board():
+                await monalisa.calculate_mismatched_pixels()
+            await asyncio.sleep(30)
+        finally:
+            print('There was an error updating the canvas.')
 
 
 @app.on_event('startup')
