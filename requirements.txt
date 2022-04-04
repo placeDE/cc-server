@@ -1,7 +1,9 @@
-fastapi
+fastapi~=0.75.1
 uvicorn
-pillow
+pillow~=9.1.0
 requests
-websockets
+websockets~=10.2
 websocket-client
-aiohttp
+aiohttp~=3.8.1
+
+pydantic~=1.9.0

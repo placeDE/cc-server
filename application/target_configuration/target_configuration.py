@@ -1,12 +1,11 @@
 import json
 import random
 import time
-import asyncio
 
 import aiohttp
-import requests
 
 from application import static_stuff
+from application.api.config import ServerConfig
 
 UPDATE_INTERVAL = 60
 
@@ -17,16 +16,18 @@ class TargetConfiguration:
     Is refreshed periodically by pulling it from a server
     """
 
-    def __init__(self):
+    def __init__(self, settings: ServerConfig):
         self.last_update = 0
         self.config = {}
         self.pixels = []
+        self.settings = settings
+        print(settings)
 
     async def get_config(self, ignore_time: bool = False):
         """
         Get the config and refresh it first if necessary
         """
-        if self.last_update + UPDATE_INTERVAL < time.time() and not ignore_time:
+        if self.last_update + self.settings.canvas_update_interval < time.time() and not ignore_time:
             await self.refresh_config()
             self.last_update = time.time()
 
@@ -47,7 +48,7 @@ class TargetConfiguration:
         """
         print("\nRefreshing target configuration...\n")
 
-        url = static_stuff.target_configuration_url
+        url = self.settings.remote_config_url
 
         if url.startswith("http"):
             async with aiohttp.ClientSession() as session:

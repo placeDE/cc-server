@@ -1,37 +1,76 @@
-# library imports
-
-from __future__ import annotations
-
 import asyncio
+from functools import lru_cache
 
-# our imports
+from fastapi import FastAPI, WebSocket, WebSocketDisconnect, Depends
+from fastapi.responses import JSONResponse
+
+from application.api.commands import request_pixel, ping
+from application.api.connection_manager import ConnectionManager
+from application.api.config import ServerConfig
+from application.canvas.canvas import Canvas
 from application.target_configuration.target_configuration import TargetConfiguration
-from application.canvas import canvas
-from application.connections import websocket_server
 
-# from fastapi import
-
+app = FastAPI()
+connection_manager = ConnectionManager()
 
 
-# create target_configuration
-target_configuration = TargetConfiguration()
-# manage r/place canvas
-monalisa = canvas.Canvas(target_configuration)
-# server for remote bot connections
-server = websocket_server.Server(monalisa, {"host": "0.0.0.0", "port": 8080})
-
-async def main_loop():
-    while True:
-        # update board if it needs to be updated
-        if await monalisa.update_board():
-            await monalisa.calculate_mismatched_pixels()
-        await asyncio.sleep(30)
+config = ServerConfig()
+canvas: Canvas
 
 
-looper = asyncio.new_event_loop()
-looper.create_task(main_loop())
-looper.create_task(server.run(looper))
-try:
-    looper.run_forever()
-except (KeyboardInterrupt, RuntimeError):
-    print("Exiting!")
+async def update_canvas(monalisa: Canvas):
+    if await monalisa.update_board():
+        await monalisa.calculate_mismatched_pixels()
+    await asyncio.sleep(30)
+
+
+@app.on_event('startup')
+async def startup():
+    global canvas
+    target_config = TargetConfiguration(config)
+    canvas = Canvas(target_config)
+    print('Scheduling canvas update')
+    asyncio.create_task(update_canvas(canvas))
+
+
+@app.websocket('/live')
+async def live_endpoint(websocket: WebSocket):
+    await connection_manager.connect(websocket)
+
+    try:
+        while True:
+            data = await websocket.receive_json()
+            if 'operation' in data:
+                op = data['operation']
+                response = None
+
+                if op == 'request-pixel':
+                    response = format_response(
+                        'place-pixel',
+                        data.get('user', ''),
+                        await request_pixel(canvas)
+                    )
+                elif op == 'handshake':
+                    pass
+                elif op == 'ping':
+                    response = ping()
+
+                if response is not None:
+                    await websocket.send_json(response)
+    except WebSocketDisconnect:
+        connection_manager.disconnect(websocket)
+
+
+@app.get('/users/count')
+async def get_users_count():
+    return JSONResponse(content={
+        'count': connection_manager.connection_count()
+    })
+
+
+def format_response(op: str, user: str, data: dict):
+    return {
+        'operation': op,
+        'data': data,
+        'user': user
+    }
