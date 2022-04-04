@@ -68,7 +68,7 @@ class Server:
                 elif req.get("operation") == "handshake":
                     bot_count = req["data"].get("useraccounts", 1)
                     self.__client_count += bot_count
-                    print(f"New Client connected! New bot count: {self.__client_count}")
+                    print(f"{bot_count} New Client(s) connected! New bot count: {self.__client_count}")
 
                 elif req.get("operation") == "get-botcount":
                     await socket.send(json.dumps({"amount": self.__client_count}))
@@ -77,7 +77,7 @@ class Server:
             pass
         finally:
             self.__client_count -= bot_count
-            print(f"Client lost! New bot count: {self.__client_count}")
+            print(f"{bot_count} Client(s) lost! New bot count: {self.__client_count}")
 
     @staticmethod
     def __wrap_data(data: dict, user: str, operation: str = "place-pixel") -> dict:
