@@ -2,8 +2,6 @@ from pydantic import BaseSettings
 
 
 class ServerConfig(BaseSettings):
-    host: str = '0.0.0.0'
-    port: int = 5000
     remote_config_url: str = 'https://placede.github.io/pixel/pixel.json'
     canvas_update_interval: int = 10
 
