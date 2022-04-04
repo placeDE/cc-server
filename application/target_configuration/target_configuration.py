@@ -45,7 +45,7 @@ class TargetConfiguration:
                     }
                     lst.append(px)
                     self.pixel_dict.update({(p["x"], p["y"]): px})
-            random.shuffle(lst)
+            #random.shuffle(lst)
             self.pixels = lst
 
         return self.config

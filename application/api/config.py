@@ -6,7 +6,7 @@ class ServerConfig(BaseSettings):
     canvas_update_interval: int = 10
     admin_password: str = "bea976c455d292fdd15256d3263cb2b70f051337f134b0fa9678d5eb206b4c45ebd213694af9cf6118700fc8488809be9195c7eae44a882c6be519ba09b68e47"
     influx_token: str 
-    influx_url: str = "https://influx.place.dertiedemann.com"
+    influx_url: str
 
 def get_graphql_config():
     return {

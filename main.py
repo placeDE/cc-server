@@ -67,6 +67,7 @@ async def metrics():
         finally: 
             await asyncio.sleep(10)
 
+
 async def update_canvas(monalisa: Canvas):
     while True:
         try:
