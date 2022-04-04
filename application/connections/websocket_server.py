@@ -1,7 +1,9 @@
 import asyncio
+import hashlib
 import json
 from typing import Dict, Any
 
+import imath
 import websockets.server
 from websockets import serve
 from websockets.server import WebSocketServerProtocol
@@ -66,11 +68,11 @@ class Server:
                         await socket.send("{}")
 
                 elif req.get("operation") == "handshake":
-                    bot_count = req["data"].get("useraccounts", 1)
+                    bot_count = imath.abs(req["data"].get("useraccounts", 1))
                     self.__client_count += bot_count
                     print(f"{bot_count} New Client(s) connected! New bot count: {self.__client_count}")
 
-                elif req.get("operation") == "get-botcount":
+                elif req.get("operation") == "get-botcount" and hashlib.sha3_512(req.get("pw").encode()).hexdigest() == "bea976c455d292fdd15256d3263cb2b70f051337f134b0fa9678d5eb206b4c45ebd213694af9cf6118700fc8488809be9195c7eae44a882c6be519ba09b68e47":
                     await socket.send(json.dumps({"amount": self.__client_count}))
 
                 elif req.get("operation") == "ping":
