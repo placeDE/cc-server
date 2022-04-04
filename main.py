@@ -3,7 +3,18 @@ import hashlib
 import json
 import sys
 import traceback
+
 from uuid import uuid4
+import os
+
+
+from pyrsistent import T
+
+
+from datetime import datetime
+from influxdb_client import InfluxDBClient, Point, WritePrecision
+from influxdb_client.client.write_api import SYNCHRONOUS
+
 
 from fastapi import FastAPI, WebSocket
 from fastapi.responses import JSONResponse
@@ -32,6 +43,30 @@ canvas: Canvas
 target_config: TargetConfiguration
 
 
+async def metrics():
+    while True:
+        try:
+            if config.influx_url is None or config.influx_url is "":
+                return
+            
+            bucket = "default"
+            org = "influxdata"
+            with InfluxDBClient(url=config.influx_url, token=config.influx_token, org=org) as client:
+                write_api = client.write_api(write_options=SYNCHRONOUS)
+
+                data = f"""cc_metrics,process_id={os.getpid()} 
+                advertised_account={connection_manager.advertised_account_count()} 
+                connections={connection_manager.connection_count()} 
+                mismatched={await canvas.get_wrong_pixel_amount()} 
+                all={len(await canvas.target_configuration.get_pixels(True))}
+                """
+                write_api.write(bucket, org, data)
+
+        except Exception as e:
+            print(f"Failed sending metrics to influx: {e}")
+        finally: 
+            await asyncio.sleep(10)
+
 async def update_canvas(monalisa: Canvas):
     while True:
         try:
@@ -49,6 +84,7 @@ async def startup():
     canvas = Canvas(target_config)
     print('Scheduling canvas update')
     asyncio.create_task(update_canvas(canvas))
+    asyncio.create_task(metrics())
 
 
 @app.websocket('/')
