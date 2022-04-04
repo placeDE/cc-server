@@ -53,7 +53,9 @@ async def live_endpoint(websocket: WebSocket):
                         await request_pixel(canvas)
                     )
                 elif op == 'handshake':
-                    pass
+                    metadata = data.get('data', {})
+                    advertised_count = metadata.get('useraccounts', 1)
+                    connection_manager.set_advertised_accounts(websocket, advertised_count)
                 elif op == 'ping':
                     response = ping()
 
@@ -67,7 +69,8 @@ async def live_endpoint(websocket: WebSocket):
 @app.get('/users/count')
 async def get_users_count():
     return JSONResponse(content={
-        'count': connection_manager.connection_count()
+        'count': connection_manager.connection_count(),
+        'advertised_accounts': connection_manager.advertised_account_count()
     })
 
 
