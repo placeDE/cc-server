@@ -50,11 +50,10 @@ class Server:
             # TODO: check for update availability.
 
             async for msg in socket:
-                print(msg)
-
                 req = json.loads(msg)
 
                 if req.get("operation") == "request-pixel":
+                    print(msg)
                     pixel = await self.provider.pop_mismatched_pixel()
                     if pixel:
                         data = {
