@@ -65,12 +65,14 @@ async def live_endpoint(websocket: WebSocket):
                     pixel = await canvas.pop_mismatched_pixel()
                     if pixel:
                         px = await get_pixel_data(pixel)
+                        print(px)
                         response = format_response(
                             'place-pixel',
                             data.get('user', ''),
-                            #await get_pixel_data(pixel)
+                            #await get_pixel_data(pixel),
                             px
                         )
+                        print(response)
                     else:
                         response = {}
                 elif op == 'handshake':
