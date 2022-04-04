@@ -18,6 +18,7 @@ class TargetConfiguration:
     def __init__(self, settings: ServerConfig):
         self.last_update = 0
         self.config = {}
+        self.versions = {}
         self.pixels = []
         self.settings = settings
         print(settings)
@@ -31,6 +32,7 @@ class TargetConfiguration:
             self.last_update = time.time()
 
             lst = []
+            self.versions = self.config["versions"]
             priorities = self.config["priorities"]
             for s in self.config["structures"].values():
                 prio = (priorities.get(str(s.get("priority"))) or 0) * random.randint(0, 100) / 100

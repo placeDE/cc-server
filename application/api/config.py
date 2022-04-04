@@ -4,7 +4,6 @@ from pydantic import BaseSettings
 class ServerConfig(BaseSettings):
     remote_config_url: str = 'https://placede.github.io/pixel/pixel.json'
     canvas_update_interval: int = 10
-    min_version: int = 0
 
 
 def get_graphql_config():

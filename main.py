@@ -5,7 +5,7 @@ import json
 from fastapi import FastAPI, WebSocket, WebSocketDisconnect
 from fastapi.responses import JSONResponse
 
-from application.api.commands import request_pixel, ping, version_check
+from application.api.commands import request_pixel, ping
 from application.api.connection_manager import ConnectionManager
 from application.api.config import ServerConfig
 from application.canvas.canvas import Canvas
@@ -16,7 +16,7 @@ connection_manager = ConnectionManager()
 
 config = ServerConfig()
 canvas: Canvas
-
+versions: dict
 
 async def update_canvas(monalisa: Canvas):
     while True:
@@ -31,13 +31,15 @@ async def update_canvas(monalisa: Canvas):
 @app.on_event('startup')
 async def startup():
     global canvas
+    global versions
     target_config = TargetConfiguration(config)
+    versions = target_config.versions
     canvas = Canvas(target_config)
     print('Scheduling canvas update')
     asyncio.create_task(update_canvas(canvas))
 
 
-@app.websocket('/live')
+@app.websocket('/')
 async def live_endpoint(websocket: WebSocket):
     await connection_manager.connect(websocket)
 
@@ -58,16 +60,20 @@ async def live_endpoint(websocket: WebSocket):
                 elif op == 'handshake':
                     metadata = data.get('data', {})
                     advertised_count = metadata.get('useraccounts', 1)
-                    if not version_check(config, metadata):
+
+                    client_version = data.get('version', -1)
+                    client_protocol = data.get('protocol', '')
+                    target_version = versions.get(client_protocol, -1)
+
+                    # wenn der client nix schickt nehmen wir an, dass er in ordnung ist
+                    if client_version < 0 or target_version < 0 or client_version >= target_version:
                         response = format_response(
                             'notify-update',
                             data.get('user', ''),
                             {
-                                'min_version', config.min_version
+                                'version', target_version
                             }
                         )
-                        await websocket.close(4001)
-                        return
                     connection_manager.set_advertised_accounts(websocket, advertised_count)
                 elif op == 'ping':
                     response = ping()
