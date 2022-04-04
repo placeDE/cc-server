@@ -1,4 +1,5 @@
 import asyncio
+import json
 from functools import lru_cache
 
 from fastapi import FastAPI, WebSocket, WebSocketDisconnect, Depends
@@ -40,6 +41,7 @@ async def live_endpoint(websocket: WebSocket):
     try:
         while True:
             data = await websocket.receive_json()
+            print(f'RX: {json.dumps(data)}')
             if 'operation' in data:
                 op = data['operation']
                 response = None
@@ -56,6 +58,7 @@ async def live_endpoint(websocket: WebSocket):
                     response = ping()
 
                 if response is not None:
+                    print(f'TX: {json.dumps(response)}')
                     await websocket.send_json(response)
     except WebSocketDisconnect:
         connection_manager.disconnect(websocket)
