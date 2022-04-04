@@ -57,7 +57,6 @@ async def live_endpoint(websocket: WebSocket):
     try:
         while True:
             data = await websocket.receive_json()
-            print(f'RX: {json.dumps(data)}')
             if op := data.get("operation"):
                 response = None
 
@@ -94,7 +93,6 @@ async def live_endpoint(websocket: WebSocket):
                     response = ping()
 
                 if response is not None:
-                    print(f'TX: {json.dumps(response)}')
                     print(response)
                     await websocket.send_json(response)
     finally:
