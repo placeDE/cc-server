@@ -10,6 +10,8 @@ async def request_pixel(canvas: Canvas):
             'y': pixel['y'],
             'color': get_color_from_index(pixel['color_index']).value['id']
         }
+    else:
+        return {}
 
 
 # no-op

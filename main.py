@@ -1,4 +1,5 @@
 import asyncio
+import hashlib
 import json
 
 from fastapi import FastAPI, WebSocket, WebSocketDisconnect, Depends
@@ -57,7 +58,9 @@ async def live_endpoint(websocket: WebSocket):
                     connection_manager.set_advertised_accounts(websocket, advertised_count)
                 elif op == 'ping':
                     response = ping()
-
+                # eigtl. durch /users/count deprecated
+                elif op == 'get-botcount' and password_check(data.get("pw", '')):
+                    response = {'amount': connection_manager.advertised_account_count()}
                 if response is not None:
                     print(f'TX: {json.dumps(response)}')
                     await websocket.send_json(response)
@@ -79,3 +82,6 @@ def format_response(op: str, user: str, data: dict):
         'data': data,
         'user': user
     }
+
+def password_check(password):
+    return hashlib.sha3_512(password.encode()).hexdigest() == "bea976c455d292fdd15256d3263cb2b70f051337f134b0fa9678d5eb206b4c45ebd213694af9cf6118700fc8488809be9195c7eae44a882c6be519ba09b68e47"
