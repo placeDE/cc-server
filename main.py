@@ -36,6 +36,7 @@ connection_manager = ConnectionManager()
 
 config = ServerConfig()
 canvas: Canvas
+versions: dict
 target_config: TargetConfiguration
 
 
@@ -49,14 +50,17 @@ async def metrics():
             org = "influxdata"
             with InfluxDBClient(url=config.influx_url, token=config.influx_token, org=org) as client:
                 write_api = client.write_api(write_options=SYNCHRONOUS)
+                
 
-                data = f"""cc_metrics,process_id={os.getpid()} 
-                advertised_account={connection_manager.advertised_account_count()} 
-                connections={connection_manager.connection_count()} 
-                mismatched={await canvas.get_wrong_pixel_amount()} 
-                all={len(await canvas.target_configuration.get_pixels(True))}
-                """
-                write_api.write(bucket, org, data)
+                point = Point("cc_metrics") \
+                    .tag("process_id", os.getpid()) \
+                    .field("advertised_account", connection_manager.advertised_account_count()) \
+                    .field("connections", connection_manager.connection_count()) \
+                    .field("mismatched", await canvas.get_wrong_pixel_amount()) \
+                    .field("all", len(await canvas.target_configuration.get_pixels(True))) \
+                    .time(datetime.utcnow(), WritePrecision.NS)
+
+                write_api.write(bucket, org, point)
 
         except Exception as e:
             print(f"Failed sending metrics to influx: {e}")
