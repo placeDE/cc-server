@@ -172,16 +172,19 @@ class Canvas:
 
     async def __generate_images(self):
         print("image generation started")
-        #correct_image = Image.fromarray(self.colors, mode="RGBA")
+        correct_image = Image.new(mode="RGBA", size=(2000, 2000),
+                                      color=(0, 0, 0, 0))
         wrong_pixel_image = Image.new(mode="RGBA", size=(2000, 2000),
                                       color=(0, 0, 0, 0))
         target_pixel_image = Image.new(mode="RGBA", size=(2000, 2000),
                                        color=(0, 0, 0, 0))
         for x in range(2000):
             for y in range(2000):
-                #if px := self.target_configuration.pixel_dict.get((x, y)):
-                #    correct_image.putpixel((x, y),
-                #                           hex_to_rgba(get_color_from_index(px['color_index']).value["hex"], False))
+                if px := self.target_configuration.pixel_dict.get((x, y)):
+                    correct_image.putpixel((x, y),
+                                           hex_to_rgba(get_color_from_index(px['color_index']).value["hex"], False))
+                else:
+                    correct_image.putpixel((x, y), hex_to_rgba(self.colors[x][y].value["hex"], False))
 
                 if px := self.target_configuration.pixel_dict.get((x, y)):
                     if (x, y) in self.mismatched_pixel_dict:

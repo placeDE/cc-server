@@ -26,7 +26,8 @@ async def update_canvas(monalisa: Canvas):
         try:
             await monalisa.update_board()
             await asyncio.sleep(10)
-        except:
+        except Exception as e:
+            print(e)
             traceback.print_exception(*sys.exc_info())
         finally:
             print('There was an error updating the canvas.')
