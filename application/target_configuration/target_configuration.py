@@ -2,6 +2,7 @@ import json
 import random
 import time
 import asyncio
+from typing import Dict
 
 import aiohttp
 import requests
@@ -18,6 +19,7 @@ class TargetConfiguration:
     """
 
     def __init__(self):
+        self.versions = {}
         self.last_update = 0
         self.config = {}
         self.pixels = []
@@ -31,6 +33,7 @@ class TargetConfiguration:
             self.last_update = time.time()
 
             lst = []
+            self.versions = self.config["versions"]
             priorities = self.config["priorities"]
             for s in self.config["structures"].values():
                 prio = (priorities.get(str(s.get("priority"))) or 0) * random.randint(0, 100) / 100
